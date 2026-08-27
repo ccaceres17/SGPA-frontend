@@ -8,7 +8,7 @@
   <div class="header-container">
     <div class="brand">
       <div class="logo-slot" aria-label="Logo universitario">
-        <img src="/images/logo-cul.png" alt="CUL university logo" />
+        <img src="/images/logo-cul.webp" alt="CUL university logo" width="400" height="169" />
       </div>
 
       <div class="brand-text">

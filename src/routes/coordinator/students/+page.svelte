@@ -25,7 +25,7 @@
       </div>
 
       <div class="header-actions">
-        <a class="report-btn" href="/coordinator/students/report" target="_blank">
+        <a class="report-btn" href="/coordinator/students/report" target="_blank" rel="noopener noreferrer">
           PDF report
         </a>
 

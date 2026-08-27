@@ -1,4 +1,5 @@
 <script>
+  import { enhance } from '$app/forms';
   import Header from '$lib/components/Header_L.svelte';
   import Footer from '$lib/components/Footer.svelte';
 
@@ -6,6 +7,16 @@
 
   let selectedRole = $state('students');
   let email = $state('');
+  let submitting = $state(false);
+
+  function handleLoginSubmit() {
+    submitting = true;
+
+    return async ({ update }) => {
+      await update();
+      submitting = false;
+    };
+  }
 
   $effect(() => {
     if (form?.selectedRole) {
@@ -62,7 +73,13 @@
         </div>
 
         <div class="login-image-slot">
-          <img src="/images/login-banner.png" alt="SGPA system access banner" />
+          <img
+            src="/images/login-banner.webp"
+            alt="SGPA system access banner"
+            width="1200"
+            height="800"
+            fetchpriority="high"
+          />
         </div>
       </div>
     </section>
@@ -93,7 +110,7 @@
           </div>
         {/if}
 
-        <form method="POST" class="login-form">
+        <form method="POST" class="login-form" use:enhance={handleLoginSubmit}>
           <div class="input-group-custom">
             <label for="email">Email</label>
             <input
@@ -142,8 +159,8 @@
             </div>
           </div>
 
-          <button class="btn-primary" type="submit">
-            Log in
+          <button class="btn-primary" type="submit" disabled={submitting}>
+            {submitting ? 'Signing in...' : 'Log in'}
           </button>
         </form>
       </div>

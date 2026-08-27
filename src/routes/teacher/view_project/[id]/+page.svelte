@@ -10,6 +10,7 @@
   let confirmOpen = false;
   let pendingForm = null;
   let allowSubmit = false;
+  let updatingStatus = false;
 
   let modalTitle = 'Confirm action';
   let modalMessage = 'Are you sure you want to continue?';
@@ -57,9 +58,9 @@
 
     const formToSubmit = pendingForm;
 
-    confirmOpen = false;
     pendingForm = null;
     allowSubmit = true;
+    updatingStatus = true;
 
     formToSubmit.requestSubmit();
   }
@@ -302,6 +303,7 @@
   confirmText={modalConfirmText}
   cancelText="Cancel"
   variant={modalVariant}
+  loading={updatingStatus}
   onCancel={closeConfirm}
   onConfirm={confirmAction}
 />

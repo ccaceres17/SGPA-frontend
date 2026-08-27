@@ -21,8 +21,8 @@
       <h4>USEFUL LINKS</h4>
       <a href="/">Home</a>
       <a href="/login">System login</a>
-      <a href="/">Data processing policy</a>
-      <a href="/">User support</a>
+      <span class="footer-link-disabled" aria-disabled="true">Data processing policy</span>
+      <span class="footer-link-disabled" aria-disabled="true">User support</span>
     </div>
 
     <div class="footer-column">
@@ -36,21 +36,21 @@
   <div class="footer-divider bottom"></div>
 
   <div class="footer-social" aria-label="Social media and contact links">
-    <a href="/" aria-label="Facebook" class="social-link facebook" title="Facebook">
+    <span aria-label="Facebook" aria-disabled="true" class="social-link facebook" title="Facebook">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
           d="M14.18 8.35H17V4.22C16.52 4.15 14.86 4 13.3 4C10.04 4 7.8 5.93 7.8 9.45V12H4.5V16.65H7.8V24H12.55V16.65H16.05L16.65 12H12.55V9.9C12.55 8.82 12.84 8.35 14.18 8.35Z"
         />
       </svg>
-    </a>
+    </span>
 
-    <a href="/" aria-label="Instagram" class="social-link instagram" title="Instagram">
+    <span aria-label="Instagram" aria-disabled="true" class="social-link instagram" title="Instagram">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="4" y="4" width="16" height="16" rx="5" />
         <circle cx="12" cy="12" r="3.55" />
         <circle cx="17" cy="7" r="1.1" />
       </svg>
-    </a>
+    </span>
 
     <a
       href="https://wa.me/573148962734"
@@ -58,7 +58,7 @@
       class="social-link whatsapp"
       title="WhatsApp"
       target="_blank"
-      rel="noreferrer"
+      rel="noopener noreferrer"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -124,7 +124,8 @@
   }
 
   .footer-column p,
-  .footer-column a {
+  .footer-column a,
+  .footer-column .footer-link-disabled {
     display: block;
     margin: 0 0 10px;
     color: rgba(255, 255, 255, 0.78);
@@ -135,6 +136,10 @@
 
   .footer-column a:hover {
     color: var(--sgpa-yellow);
+  }
+
+  .footer-link-disabled {
+    cursor: default;
   }
 
   .footer-brand p {

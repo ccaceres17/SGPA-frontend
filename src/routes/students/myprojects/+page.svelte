@@ -34,7 +34,7 @@
       </div>
 
       <div class="header-actions">
-        <a class="report-btn" href="/students/myprojects/report" target="_blank">
+        <a class="report-btn" href="/students/myprojects/report" target="_blank" rel="noopener noreferrer">
           PDF report
         </a>
 

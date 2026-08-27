@@ -35,7 +35,7 @@
       </div>
     </div>
 
-    <section class="quick-grid" aria-label="Resumen del sistema">
+    <section class="quick-grid" aria-label="System overview">
       {#each quickCards as card}
         <article class="quick-card">
           <span class="quick-dot"></span>

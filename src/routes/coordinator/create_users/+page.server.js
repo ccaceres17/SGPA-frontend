@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import { API_BASE_URL, getAuthHeaders } from "../../../lib/components/Tokens";
+import { API_BASE_URL, getAuthHeaders } from '$lib/components/Tokens.js';
 
 const USERS_ENDPOINT = `${API_BASE_URL}/users`;
 

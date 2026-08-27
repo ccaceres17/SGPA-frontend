@@ -9,21 +9,27 @@
       description:
         'View, register, and organize academic projects within the SGPA system.',
       action: 'Learn more',
-      image: '/images/gestion-proyectos.png'
+      image: '/images/gestion-proyectos.webp',
+      width: 800,
+      height: 427
     },
     {
       title: 'Calls',
       description:
         'Access active calls, enrollment processes, and academic tracking.',
       action: 'Explore',
-      image: '/images/convocatorias.png'
+      image: '/images/convocatorias.webp',
+      width: 800,
+      height: 800
     },
     {
       title: 'Academic tracking',
       description:
         'View the overall status of processes, deliverables, progress, and responsible users.',
       action: 'View',
-      image: '/images/seguimiento.png'
+      image: '/images/seguimiento.webp',
+      width: 800,
+      height: 534
     }
   ];
 
@@ -31,17 +37,23 @@
     {
       role: 'Coordinator',
       text: 'Main system administrator responsible for overall supervision and process validation.',
-      image: '/images/coordinador.png'
+      image: '/images/coordinador.png',
+      width: 302,
+      height: 338
     },
     {
       role: 'Academic team',
       text: 'Support team responsible for tracking, reviewing, and supporting project management.',
-      image: '/images/equipo-academico.png'
+      image: '/images/equipo-academico.png',
+      width: 400,
+      height: 267
     },
     {
       role: 'Teachers',
       text: 'They participate in guiding, evaluating, and supporting academic initiatives.',
-      image: '/images/docentes.png'
+      image: '/images/docentes.png',
+      width: 400,
+      height: 271
     }
   ];
 </script>
@@ -79,7 +91,13 @@
         </div>
 
         <div class="hero-image-slot">
-          <img src="/images/login-banner.png" alt="Main SGPA system banner" />
+          <img
+            src="/images/login-banner.webp"
+            alt="Main SGPA system banner"
+            width="1200"
+            height="800"
+            fetchpriority="high"
+          />
         </div>
       </div>
     </section>
@@ -138,7 +156,13 @@
         {#each quickAccess as item}
           <article class="feature-card">
             <div class="feature-image-slot">
-              <img src={item.image} alt={item.title} />
+              <img
+                src={item.image}
+                alt={item.title}
+                width={item.width}
+                height={item.height}
+                loading="lazy"
+              />
             </div>
 
             <div class="feature-content">
@@ -165,7 +189,13 @@
         {#each teamCards as person}
           <article class="team-card">
             <div class="team-image-slot">
-              <img src={person.image} alt={person.role} />
+              <img
+                src={person.image}
+                alt={person.role}
+                width={person.width}
+                height={person.height}
+                loading="lazy"
+              />
             </div>
 
             <div class="team-content">
