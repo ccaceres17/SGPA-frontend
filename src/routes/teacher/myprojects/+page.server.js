@@ -7,10 +7,12 @@ import {
   getStatusLabel,
   getUserFullName
 } from '$lib/server/project-helpers.js';
-import {
-  getProjectStatusOverride,
-  applyProjectStatusOverride
-} from '$lib/server/project-status-overrides.js';
+
+// Cookie name used by a previous implementation that faked a "successful"
+// status update in the browser when the backend actually rejected it. It is
+// cleared defensively so a browser that still holds one never shows a status
+// that the backend never persisted.
+const LEGACY_STATUS_OVERRIDE_COOKIE = 'sgpa_teacher_project_status_overrides_v1';
 
 function getCurrentTeacherId(locals) {
   return Number(locals?.session?.user?.id_user || 0);
@@ -23,21 +25,6 @@ function escapeHtml(value = '') {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
-}
-
-function isCancelledStatus(statusId, statuses = []) {
-  const selectedStatus = statuses.find(
-    (status) => Number(status.id_status) === Number(statusId)
-  );
-
-  const name = String(selectedStatus?.status_name || '').trim().toLowerCase();
-
-  return (
-    Number(statusId) === 4 ||
-    name === 'cancelled' ||
-    name === 'canceled' ||
-    name === 'cancelado'
-  );
 }
 
 function buildProjectCardHtml({
@@ -86,6 +73,8 @@ function buildProjectCardHtml({
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch, locals, cookies }) {
+  cookies.delete(LEGACY_STATUS_OVERRIDE_COOKIE, { path: '/' });
+
   const currentTeacherId = getCurrentTeacherId(locals);
 
   if (!currentTeacherId) {
@@ -123,15 +112,7 @@ export async function load({ fetch, locals, cookies }) {
 
     const currentTeacher = usersMap.get(currentTeacherId);
 
-    const rows = teacherProjects.map((originalProject) => {
-      const backendProjectIsCancelled = isCancelledStatus(originalProject.id_status, statuses);
-
-      const statusOverride = backendProjectIsCancelled
-        ? null
-        : getProjectStatusOverride(cookies, currentTeacherId, originalProject.id_project);
-
-      const project = applyProjectStatusOverride(originalProject, statusOverride);
-
+    const rows = teacherProjects.map((project) => {
       return {
         proyecto_card: buildProjectCardHtml({
           project,
@@ -139,9 +120,7 @@ export async function load({ fetch, locals, cookies }) {
           teacherName: currentTeacher ? getUserFullName(currentTeacher) : 'Current teacher',
           actionHref: `/teacher/view_project/${project.id_project}`,
           actionLabel: 'View project',
-          badgeLabel: project.has_frontend_status_override
-            ? 'Frontend status'
-            : 'Assigned project'
+          badgeLabel: 'Assigned project'
         })
       };
     });

@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/components/Tokens.js';
+import { performLogin } from '$lib/server/login-request.js';
 import {
   buildSession,
   getRoleHome,
@@ -14,10 +15,6 @@ const ROLE_LABELS = {
   coordinator: 'Coordinator'
 };
 
-function getLoginUrl() {
-  return `${API_BASE_URL}/auth/login`;
-}
-
 function normalizeSelectedRole(role = '') {
   const normalized = normalizeRole(role);
 
@@ -26,168 +23,6 @@ function normalizeSelectedRole(role = '') {
   if (normalized === 'coordinator') return 'coordinator';
 
   return '';
-}
-
-function getFriendlyLoginError(status, data) {
-  const detail =
-    typeof data === 'string'
-      ? data
-      : data?.detail || data?.message || data?.error || '';
-
-  if (status === 400) return 'Incorrect credentials.';
-  if (status === 401) return 'Incorrect credentials.';
-  if (status === 403) return 'You do not have permission to access the system.';
-  if (status === 422) return 'The login request format is not accepted by the API.';
-  if (status >= 500) return 'The server had an internal error. Please try again later.';
-
-  if (detail) return String(detail);
-
-  return 'Could not complete login. Please try again.';
-}
-
-async function parseResponse(response) {
-  const text = await response.text().catch(() => '');
-
-  try {
-    return text ? JSON.parse(text) : null;
-  } catch (_) {
-    return text;
-  }
-}
-
-async function tryLoginRequest(fetch, payload) {
-  const queryParams = new URLSearchParams({
-    email: payload.email,
-    password: payload.password
-  });
-
-  const usernameQueryParams = new URLSearchParams({
-    username: payload.email,
-    password: payload.password
-  });
-
-  const attempts = [
-    {
-      type: 'query-email',
-      url: `${getLoginUrl()}?${queryParams.toString()}`,
-      options: {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json'
-        }
-      }
-    },
-    {
-      type: 'query-username',
-      url: `${getLoginUrl()}?${usernameQueryParams.toString()}`,
-      options: {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json'
-        }
-      }
-    },
-    {
-      type: 'json-email',
-      url: getLoginUrl(),
-      options: {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json'
-        },
-        body: JSON.stringify({
-          email: payload.email,
-          password: payload.password
-        })
-      }
-    },
-    {
-      type: 'json-username',
-      url: getLoginUrl(),
-      options: {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json'
-        },
-        body: JSON.stringify({
-          username: payload.email,
-          password: payload.password
-        })
-      }
-    },
-    {
-      type: 'form-username',
-      url: getLoginUrl(),
-      options: {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json'
-        },
-        body: new URLSearchParams({
-          username: payload.email,
-          password: payload.password
-        })
-      }
-    }
-  ];
-
-  let lastResult = null;
-
-  for (const attempt of attempts) {
-    try {
-      const response = await fetch(attempt.url, attempt.options);
-      const data = await parseResponse(response);
-
-      if (response.ok) {
-        return {
-          ok: true,
-          data,
-          status: response.status,
-          attempt: attempt.type
-        };
-      }
-
-      lastResult = {
-        ok: false,
-        data,
-        status: response.status,
-        attempt: attempt.type
-      };
-
-      /*
-        Si la API responde 401 o 403, normalmente las credenciales son incorrectas
-        o el usuario no tiene permiso. No tiene sentido seguir probando formatos.
-      */
-      if ([401, 403].includes(response.status)) {
-        break;
-      }
-
-      /*
-        Si responde 422, sí probamos el siguiente formato porque puede ser un problema
-        de cómo la API espera recibir email/password.
-      */
-    } catch (error) {
-      lastResult = {
-        ok: false,
-        data: null,
-        status: 0,
-        attempt: attempt.type,
-        error
-      };
-    }
-  }
-
-  return (
-    lastResult || {
-      ok: false,
-      data: null,
-      status: 0,
-      error: new Error('No response from API.')
-    }
-  );
 }
 
 /** @type {import('./$types').PageServerLoad} */
@@ -241,17 +76,11 @@ export const actions = {
       });
     }
 
-    const loginResult = await tryLoginRequest(fetch, {
-      email,
-      password
-    });
+    const loginResult = await performLogin(fetch, API_BASE_URL, email, password);
 
-    if (!loginResult?.ok) {
-      return fail(loginResult?.status || 500, {
-        error:
-          loginResult?.status === 0
-            ? 'Could not connect to the server. Please try again.'
-            : getFriendlyLoginError(loginResult.status, loginResult.data),
+    if (!loginResult.ok) {
+      return fail(loginResult.status || 500, {
+        error: loginResult.error,
         email,
         selectedRole
       });

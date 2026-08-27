@@ -8,12 +8,13 @@ import {
   getStatusLabel,
   updateProjectStatus
 } from '$lib/server/project-helpers.js';
-import {
-  getProjectStatusOverride,
-  setProjectStatusOverride,
-  clearProjectStatusOverride,
-  applyProjectStatusOverride
-} from '$lib/server/project-status-overrides.js';
+import { applyStatusUpdate } from '$lib/server/status-update.js';
+
+// Cookie name used by a previous implementation that faked a "successful"
+// status update in the browser when the backend actually rejected it. It is
+// cleared defensively so a browser that still holds one never shows a status
+// that the backend never persisted.
+const LEGACY_STATUS_OVERRIDE_COOKIE = 'sgpa_teacher_project_status_overrides_v1';
 
 function getCurrentTeacherId(locals) {
   return Number(locals?.session?.user?.id_user || 0);
@@ -64,16 +65,10 @@ function filterStatusesForTeacher(statuses = []) {
   return statuses.filter((status) => !isCancelledStatus(status.id_status, statuses));
 }
 
-function isPermissionBlocked(error) {
-  return (
-    Number(error?.status) === 403 ||
-    String(error?.message || '').toLowerCase().includes('status 403') ||
-    String(error?.message || '').toLowerCase().includes('forbidden')
-  );
-}
-
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch, params, locals, cookies }) {
+  cookies.delete(LEGACY_STATUS_OVERRIDE_COOKIE, { path: '/' });
+
   const projectId = Number(params.id);
   const currentTeacherId = getCurrentTeacherId(locals);
 
@@ -121,13 +116,7 @@ export async function load({ fetch, params, locals, cookies }) {
       };
     }
 
-    const backendProjectIsCancelled = isCancelledStatus(originalProject.id_status, statuses);
-
-    const statusOverride = backendProjectIsCancelled
-      ? null
-      : getProjectStatusOverride(cookies, currentTeacherId, projectId);
-
-    const project = applyProjectStatusOverride(originalProject, statusOverride);
+    const project = originalProject;
 
     const assignedTeacher = getTeacherAssignedToProject(relations, users, projectId);
     const enrolledStudents = getStudentsAssignedToProject(relations, users, projectId);
@@ -151,8 +140,7 @@ export async function load({ fetch, params, locals, cookies }) {
       teacherStatuses: filterStatusesForTeacher(statuses),
       statusLabel: getStatusLabel(project.id_status, statuses),
       isAssignedToCurrentTeacher,
-      isProjectCancelled,
-      hasFrontendStatusOverride: Boolean(project.has_frontend_status_override)
+      isProjectCancelled
     };
   } catch (error) {
     return {
@@ -173,6 +161,8 @@ export const actions = {
     const currentTeacherId = getCurrentTeacherId(locals);
     const formData = await request.formData();
     const statusId = Number(formData.get('statusId'));
+
+    cookies.delete(LEGACY_STATUS_OVERRIDE_COOKIE, { path: '/' });
 
     if (!currentTeacherId) {
       return fail(400, {
@@ -233,38 +223,25 @@ export const actions = {
         });
       }
 
-      const statusOverride = getProjectStatusOverride(cookies, currentTeacherId, projectId);
-      const visibleProject = applyProjectStatusOverride(originalProject, statusOverride);
-
-      if (Number(visibleProject.id_status) === Number(statusId)) {
+      if (Number(originalProject.id_status) === Number(statusId)) {
         return {
           success: true,
-          message: 'This status is already assigned to the project in the teacher view.'
+          message: 'This status is already assigned to the project.'
         };
       }
 
-      try {
-        await updateProjectStatus(fetch, projectId, statusId, 'teacher', originalProject);
+      const result = await applyStatusUpdate(() => updateProjectStatus(fetch, projectId, statusId));
 
-        clearProjectStatusOverride(cookies, currentTeacherId, projectId);
-
-        return {
-          success: true,
-          message: 'Project status updated successfully.'
-        };
-      } catch (error) {
-        if (!isPermissionBlocked(error)) {
-          throw error;
-        }
-
-        setProjectStatusOverride(cookies, currentTeacherId, projectId, statusId);
-
-        return {
-          success: true,
-          message:
-            'Project status updated successfully.'
-        };
+      if (!result.success) {
+        return fail(result.status >= 400 ? result.status : 500, {
+          error: result.message
+        });
       }
+
+      return {
+        success: true,
+        message: 'Project status updated successfully.'
+      };
     } catch (error) {
       return fail(500, {
         error:
