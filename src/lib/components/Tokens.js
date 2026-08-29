@@ -1,4 +1,12 @@
-export const API_BASE_URL = 'https://academic-project-management-api.onrender.com/api';
+import { env } from '$env/dynamic/private';
+
+/**
+ * Server-only. Falls back to the current production API when API_BASE_URL
+ * isn't set, so behavior is unchanged until an environment sets its own
+ * value (see .env.example). Never import this module from client code.
+ */
+export const API_BASE_URL =
+  env.API_BASE_URL || 'https://academic-project-management-api.onrender.com/api';
 
 /**
  * El token real ya no se guarda aquí.

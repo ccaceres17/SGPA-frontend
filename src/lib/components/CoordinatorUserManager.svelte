@@ -1,12 +1,13 @@
 <script>
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   export let users = [];
-  export let title = 'Users';
-  export let subtitle = 'Manage registered users.';
-  export let moduleLabel = 'Coordinator module';
-  export let searchPlaceholder = 'Search user by name, email, or status...';
-  export let emptyMessage = 'No users to display.';
+  export let title = '';
+  export let subtitle = '';
+  export let moduleLabel = '';
+  export let searchPlaceholder = '';
+  export let emptyMessage = '';
   export let userType = 'users';
 
   let search = '';
@@ -14,10 +15,10 @@
   let pendingForm = null;
   let allowSubmit = false;
 
-  let modalTitle = 'Confirm action';
-  let modalMessage = 'Are you sure you want to continue?';
+  let modalTitle = '';
+  let modalMessage = '';
   let modalDetails = '';
-  let modalConfirmText = 'Confirm';
+  let modalConfirmText = '';
   let modalVariant = 'warning';
 
   $: filteredUsers = users.filter((user) => {
@@ -41,7 +42,7 @@
   $: inactiveCount = users.length - activeCount;
 
   function fullName(user) {
-    return `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Unnamed user';
+    return `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || t('ui.unnamedUser');
   }
 
   function initials(user) {
@@ -60,14 +61,15 @@
     event.preventDefault();
 
     const willEnable = !user.is_active;
+    const singularType = userType.endsWith('s') ? userType.slice(0, -1) : userType;
 
     pendingForm = event.currentTarget;
-    modalTitle = willEnable ? `Enable ${userType.slice(0, -1)}?` : `Disable ${userType.slice(0, -1)}?`;
-    modalMessage = willEnable
-      ? 'This user will regain access to the SGPA platform.'
-      : 'This user will lose access to the SGPA platform until enabled again.';
-    modalDetails = `${fullName(user)} | ${user.email || 'No email registered'}`;
-    modalConfirmText = willEnable ? 'Enable user' : 'Disable user';
+    modalTitle = willEnable
+      ? t('ui.enableQuestion', { type: singularType })
+      : t('ui.disableQuestion', { type: singularType });
+    modalMessage = willEnable ? t('ui.enableUserMessage') : t('ui.disableUserMessage');
+    modalDetails = `${fullName(user)} | ${user.email || t('ui.noEmailRegistered')}`;
+    modalConfirmText = willEnable ? t('ui.enableUser') : t('ui.disableUser');
     modalVariant = willEnable ? 'success' : 'danger';
     confirmOpen = true;
   }
@@ -102,9 +104,9 @@
     </div>
 
     <div class="summary-pills">
-      <span>{users.length} total</span>
-      <span>{activeCount} active</span>
-      <span>{inactiveCount} inactive</span>
+      <span>{users.length} {t('ui.total')}</span>
+      <span>{activeCount} {t('ui.active')}</span>
+      <span>{inactiveCount} {t('ui.inactive').toLowerCase()}</span>
     </div>
   </header>
 
@@ -114,8 +116,8 @@
       <input
         bind:value={search}
         type="search"
-        placeholder={searchPlaceholder}
-        aria-label="Search users"
+        placeholder={searchPlaceholder || t('ui.search')}
+        aria-label={t('ui.search')}
       />
     </div>
   </section>
@@ -135,15 +137,15 @@
                   <h2>{fullName(user)}</h2>
 
                   <span class="status-pill" class:inactive={!user.is_active}>
-                    {user.is_active ? 'Active' : 'Inactive'}
+                    {user.is_active ? t('ui.activeStatus') : t('ui.inactive')}
                   </span>
                 </div>
 
-                <p>{user.email || 'No email registered'}</p>
+                <p>{user.email || t('ui.noEmailRegistered')}</p>
 
                 <div class="user-meta">
                   <span><strong>ID:</strong> {user.id_user}</span>
-                  <span><strong>Phone:</strong> {user.phone_number || user.phone || 'Not registered'}</span>
+                  <span><strong>{t('ui.phone')}:</strong> {user.phone_number || user.phone || t('ui.notRegistered')}</span>
                 </div>
               </div>
             </div>
@@ -158,7 +160,7 @@
                   class:user-enable={!user.is_active}
                   class:user-disable={user.is_active}
                 >
-                  {user.is_active ? 'Disable user' : 'Enable user'}
+                  {user.is_active ? t('ui.disableUser') : t('ui.enableUser')}
                 </button>
               </form>
             </div>
@@ -168,8 +170,8 @@
     {:else}
       <div class="empty-state">
         <div>📭</div>
-        <h2>{emptyMessage}</h2>
-        <p>No records match the current search.</p>
+        <h2>{emptyMessage || t('ui.noData')}</h2>
+        <p>{t('ui.noRecordsMatch')}</p>
       </div>
     {/if}
   </section>
@@ -181,7 +183,7 @@
   message={modalMessage}
   details={modalDetails}
   confirmText={modalConfirmText}
-  cancelText="Cancel"
+  cancelText={t('ui.cancel')}
   variant={modalVariant}
   onCancel={closeConfirm}
   onConfirm={confirmAction}
@@ -201,9 +203,7 @@
     margin-bottom: 1.4rem;
     padding: 1.6rem;
     border-radius: 28px;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 18rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -249,7 +249,7 @@
   .summary-pills span {
     padding: 0.5rem 0.85rem;
     border-radius: 999px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     border: 1px solid var(--sgpa-border);
     font-size: 0.82rem;
@@ -261,7 +261,7 @@
     margin-bottom: 1rem;
     padding: 1rem;
     border-radius: 24px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-sm);
   }
@@ -301,7 +301,7 @@
   .users-card {
     padding: 1.2rem;
     border-radius: 28px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -320,15 +320,13 @@
     border-radius: 24px;
     border: 1px solid var(--sgpa-border);
     border-left: 6px solid var(--sgpa-success, #15803d);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     box-shadow: var(--sgpa-shadow-sm);
   }
 
   .user-card.inactive {
-    border-left-color: #dc2626;
-    background:
-      radial-gradient(circle at top right, rgba(254, 226, 226, 0.55), transparent 18rem),
-      #ffffff;
+    border-left-color: var(--sgpa-danger, #dc2626);
+    background: var(--sgpa-danger-bg, #fee2e2);
   }
 
   .user-main {
@@ -433,11 +431,11 @@
   }
 
   .user-disable {
-    background: linear-gradient(135deg, #dc2626, #991b1b);
+    background: var(--sgpa-danger, #dc2626);
   }
 
   .user-enable {
-    background: linear-gradient(135deg, #15803d, #166534);
+    background: var(--sgpa-success, #15803d);
   }
 
   .empty-state {

@@ -4,14 +4,16 @@
   --sgpa-surface: #ffffff;
   --sgpa-surface-soft: #f8fbff;
 
-  --sgpa-blue: #0b2d69;
-  --sgpa-blue-dark: #10264f;
-  --sgpa-blue-mid: #153f8f;
+  /* CUL institutional palette: CUL Blue #0D468D, CUL Dark Navy #202F56,
+     CUL Light Blue #0099CC (--sgpa-link), CUL Yellow #F7B806, CUL Orange #E8680D. */
+  --sgpa-blue: #0d468d;
+  --sgpa-blue-dark: #202f56;
+  --sgpa-link: #0099cc;
   --sgpa-blue-soft: #e8f0fb;
 
-  --sgpa-yellow: #f2b705;
+  --sgpa-yellow: #f7b806;
   --sgpa-yellow-soft: #fff4cc;
-  --sgpa-orange: #e87500;
+  --sgpa-orange: #e8680d;
   --sgpa-orange-soft: #fff0df;
 
   --sgpa-text: #172033;
@@ -27,6 +29,22 @@
   --sgpa-danger-bg: #fee2e2;
   --sgpa-warning: #b7791f;
   --sgpa-warning-bg: #fef3c7;
+  --sgpa-info: var(--sgpa-blue);
+  --sgpa-info-bg: #e8f0fb;
+
+  /* Button/brand surfaces are intentionally decoupled from --sgpa-blue (used for
+     text/badges) so dark mode can brighten text-role blue for legibility without
+     washing out white button text. Solid colors only — no gradients. */
+  --sgpa-accent-start: var(--sgpa-blue);
+  --sgpa-accent-hover: var(--sgpa-blue-dark);
+  --sgpa-accent-active: #16213f;
+  --sgpa-on-accent: #ffffff;
+
+  /* Elevated surface: modals, popovers, dropdowns — content that floats above
+     the base surface. Identical to --sgpa-surface in light mode (elevation is
+     conveyed by shadow there); intentionally lighter than the surface in dark
+     mode, where raising a panel by lightening it is what reads as "elevated". */
+  --sgpa-surface-elevated: #ffffff;
 
   --sgpa-radius-sm: 10px;
   --sgpa-radius-md: 16px;
@@ -37,7 +55,162 @@
   --sgpa-shadow-md: 0 16px 36px rgba(15, 35, 70, 0.1);
   --sgpa-shadow-lg: 0 24px 60px rgba(15, 35, 70, 0.14);
 
-  --sgpa-focus: 0 0 0 4px rgba(242, 183, 5, 0.28);
+  --sgpa-focus: 0 0 0 4px rgba(247, 184, 6, 0.28);
+
+  --sgpa-space-1: 0.25rem;
+  --sgpa-space-2: 0.5rem;
+  --sgpa-space-3: 0.75rem;
+  --sgpa-space-4: 1rem;
+  --sgpa-space-5: 1.5rem;
+  --sgpa-space-6: 2rem;
+  --sgpa-space-7: 3rem;
+  --sgpa-space-8: 4rem;
+
+  --sgpa-font-size-xs: 0.75rem;
+  --sgpa-font-size-sm: 0.875rem;
+  --sgpa-font-size-md: 1rem;
+  --sgpa-font-size-lg: 1.125rem;
+  --sgpa-font-size-xl: 1.5rem;
+  --sgpa-font-size-2xl: 2rem;
+  --sgpa-font-size-3xl: 2.75rem;
+  --sgpa-line-height-tight: 1.15;
+  --sgpa-line-height-normal: 1.5;
+  --sgpa-line-height-relaxed: 1.75;
+  --sgpa-font-weight-regular: 500;
+  --sgpa-font-weight-medium: 650;
+  --sgpa-font-weight-bold: 850;
+
+  --sgpa-transition-fast: 0.15s ease;
+  --sgpa-transition-base: 0.2s ease;
+  --sgpa-transition-slow: 0.32s ease;
+
+  /* Semantic aliases (Phase 3 design-system naming). These point at the same
+     values as the --sgpa-* tokens above so existing components keep working
+     unchanged, while new/updated code can use the requested semantic names. */
+  --color-bg: var(--sgpa-bg);
+  --color-surface: var(--sgpa-surface);
+  --color-surface-elevated: var(--sgpa-surface-elevated);
+  --color-surface-secondary: var(--sgpa-surface-soft);
+  --color-text-primary: var(--sgpa-text);
+  --color-text-secondary: var(--sgpa-text-soft);
+  --color-text-muted: var(--sgpa-muted);
+  --color-border: var(--sgpa-border);
+  --color-primary: var(--sgpa-blue);
+  --color-primary-hover: var(--sgpa-accent-hover);
+  --color-primary-active: var(--sgpa-accent-active);
+  --color-accent: var(--sgpa-yellow);
+  --color-link: var(--sgpa-link);
+  --color-success: var(--sgpa-success);
+  --color-warning: var(--sgpa-warning);
+  --color-danger: var(--sgpa-danger);
+  --color-info: var(--sgpa-info);
+  --color-focus: var(--sgpa-focus);
+  --shadow: var(--sgpa-shadow-md);
+  --radius: var(--sgpa-radius-md);
+  --space: var(--sgpa-space-4);
+  --transition: var(--sgpa-transition-base);
+
+  color-scheme: light;
+}
+
+/* Dark palette: applied when the user has no saved preference and their OS
+   requests dark, OR when they've explicitly chosen dark via the toggle
+   (data-theme="dark", set by src/lib/stores/theme.svelte.js). Every token that
+   carries color is redefined here — this is not a background-only flip. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --sgpa-bg: #0a1120;
+    --sgpa-bg-soft: #0e1a2e;
+    --sgpa-surface: #141f34;
+    --sgpa-surface-soft: #1a2740;
+
+    --sgpa-blue: #6f9ce8;
+    --sgpa-blue-dark: #e8eefc;
+    --sgpa-link: #4db8dd;
+    --sgpa-blue-soft: #1c2c4a;
+
+    --sgpa-yellow: #f7b806;
+    --sgpa-yellow-soft: #3a2f0a;
+    --sgpa-orange: #ff9838;
+    --sgpa-orange-soft: #3a230a;
+
+    --sgpa-text: #eef2fa;
+    --sgpa-text-soft: #a9b6cc;
+    --sgpa-muted: #7c8aa3;
+
+    --sgpa-border: #283754;
+    --sgpa-border-strong: #3a4d70;
+
+    --sgpa-success: #4ade80;
+    --sgpa-success-bg: #12301f;
+    --sgpa-danger: #f87171;
+    --sgpa-danger-bg: #3a1414;
+    --sgpa-warning: #fbbf24;
+    --sgpa-warning-bg: #3a2c0a;
+    --sgpa-info: #8fb3ee;
+    --sgpa-info-bg: #1c2c4a;
+
+    --sgpa-accent-start: #0099cc;
+    --sgpa-accent-hover: #0c7fa8;
+    --sgpa-accent-active: #0a6485;
+    --sgpa-on-accent: #ffffff;
+    --sgpa-surface-elevated: #1c2b47;
+
+    --sgpa-shadow-sm: 0 8px 18px rgba(0, 0, 0, 0.32);
+    --sgpa-shadow-md: 0 16px 36px rgba(0, 0, 0, 0.4);
+    --sgpa-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+
+    --sgpa-focus: 0 0 0 4px rgba(247, 184, 6, 0.38);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --sgpa-bg: #0a1120;
+  --sgpa-bg-soft: #0e1a2e;
+  --sgpa-surface: #141f34;
+  --sgpa-surface-soft: #1a2740;
+
+  --sgpa-blue: #6f9ce8;
+  --sgpa-blue-dark: #e8eefc;
+  --sgpa-link: #4db8dd;
+  --sgpa-blue-soft: #1c2c4a;
+
+  --sgpa-yellow: #f7b806;
+  --sgpa-yellow-soft: #3a2f0a;
+  --sgpa-orange: #ff9838;
+  --sgpa-orange-soft: #3a230a;
+
+  --sgpa-text: #eef2fa;
+  --sgpa-text-soft: #a9b6cc;
+  --sgpa-muted: #7c8aa3;
+
+  --sgpa-border: #283754;
+  --sgpa-border-strong: #3a4d70;
+
+  --sgpa-success: #4ade80;
+  --sgpa-success-bg: #12301f;
+  --sgpa-danger: #f87171;
+  --sgpa-danger-bg: #3a1414;
+  --sgpa-warning: #fbbf24;
+  --sgpa-warning-bg: #3a2c0a;
+  --sgpa-info: #8fb3ee;
+  --sgpa-info-bg: #1c2c4a;
+
+  --sgpa-accent-start: #0099cc;
+  --sgpa-accent-hover: #0c7fa8;
+  --sgpa-accent-active: #0a6485;
+  --sgpa-on-accent: #ffffff;
+  --sgpa-surface-elevated: #1c2b47;
+
+  --sgpa-shadow-sm: 0 8px 18px rgba(0, 0, 0, 0.32);
+  --sgpa-shadow-md: 0 16px 36px rgba(0, 0, 0, 0.4);
+  --sgpa-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+
+  --sgpa-focus: 0 0 0 4px rgba(247, 184, 6, 0.38);
+
+  color-scheme: dark;
 }
 
 * {
@@ -50,9 +223,7 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(11, 45, 105, 0.08), transparent 28rem),
-    linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 44%, #eef4fb 100%);
+  background: var(--sgpa-bg);
   color: var(--sgpa-text);
   font-family:
     Inter,
@@ -62,6 +233,9 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+  font-size: var(--sgpa-font-size-md);
+  line-height: var(--sgpa-line-height-normal);
+  transition: background-color var(--sgpa-transition-base), color var(--sgpa-transition-base);
 }
 
 button,
@@ -77,10 +251,22 @@ a {
 
 main {
   min-height: 80vh;
-  background:
-    radial-gradient(circle at top right, rgba(242, 183, 5, 0.1), transparent 20rem),
-    linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 100%);
+  background: var(--sgpa-bg);
   color: var(--sgpa-text);
+}
+
+/* Authenticated pages render a role sidebar (.sidebar) as a persistent
+   workspace column above 720px; this reserves the space for it next to
+   the page's own <main>, without every route needing its own layout. */
+@media (min-width: 721px) {
+  body:has(.sidebar) main {
+    margin-left: 300px;
+  }
+}
+
+.main-header,
+.report-action-card {
+  background: var(--sgpa-surface);
 }
 
 .content-wrapper,
@@ -101,12 +287,27 @@ h2,
 h3 {
   color: var(--sgpa-blue-dark);
   letter-spacing: -0.035em;
+  line-height: var(--sgpa-line-height-tight);
+  font-weight: var(--sgpa-font-weight-bold);
+}
+
+h1 {
+  font-size: var(--sgpa-font-size-3xl);
+}
+
+h2 {
+  font-size: var(--sgpa-font-size-2xl);
+}
+
+h3 {
+  font-size: var(--sgpa-font-size-xl);
 }
 
 .main-header p,
 .title-block p,
 p {
   color: var(--sgpa-text-soft);
+  line-height: var(--sgpa-line-height-relaxed);
 }
 
 button,
@@ -121,8 +322,8 @@ button,
 .nav-btn {
   border: 1px solid transparent;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--sgpa-blue), var(--sgpa-blue-mid));
-  color: #ffffff;
+  background: var(--sgpa-accent-start);
+  color: var(--sgpa-on-accent);
   font-weight: 850;
   cursor: pointer;
   text-decoration: none;
@@ -144,8 +345,23 @@ button:hover,
 .home-btn:hover,
 .nav-btn:hover {
   transform: translateY(-1px);
-  background: linear-gradient(135deg, var(--sgpa-blue-dark), var(--sgpa-blue));
-  box-shadow: 0 12px 24px rgba(11, 45, 105, 0.16);
+  background: var(--sgpa-accent-hover);
+  box-shadow: var(--sgpa-shadow-sm);
+}
+
+button:active,
+.primary-btn:active,
+.btn-primary:active,
+.save-btn:active,
+.add-btn:active,
+.action-btn:active,
+.enroll-btn:active,
+.login-btn:active,
+.home-btn:active,
+.nav-btn:active {
+  transform: translateY(0);
+  background: var(--sgpa-accent-active);
+  box-shadow: none;
 }
 
 button:disabled {
@@ -157,7 +373,7 @@ button:disabled {
 
 .secondary-btn,
 .clear-btn {
-  background: #ffffff;
+  background: var(--sgpa-surface);
   color: var(--sgpa-blue);
   border: 1px solid var(--sgpa-border-strong);
 }
@@ -166,7 +382,7 @@ button:disabled {
 .clear-btn:hover {
   background: var(--sgpa-blue-soft);
   color: var(--sgpa-blue-dark);
-  border-color: rgba(11, 45, 105, 0.28);
+  border-color: var(--sgpa-border-strong);
 }
 
 input,
@@ -176,7 +392,7 @@ textarea,
 .datatable-input,
 .datatable-selector {
   width: 100%;
-  background: #ffffff;
+  background: var(--sgpa-surface);
   color: var(--sgpa-text);
   border: 1px solid var(--sgpa-border);
   border-radius: 14px;
@@ -224,7 +440,7 @@ a:focus-visible {
 
 .error-msg,
 .error-box {
-  border: 1px solid rgba(220, 38, 38, 0.22);
+  border: 1px solid var(--sgpa-danger);
   background: var(--sgpa-danger-bg);
   color: var(--sgpa-danger);
   border-radius: var(--sgpa-radius-md);
@@ -234,7 +450,7 @@ a:focus-visible {
 
 .success-msg,
 .success-box {
-  border: 1px solid rgba(21, 128, 61, 0.22);
+  border: 1px solid var(--sgpa-success);
   background: var(--sgpa-success-bg);
   color: var(--sgpa-success);
   border-radius: var(--sgpa-radius-md);
@@ -254,7 +470,7 @@ a:focus-visible {
   border-radius: 999px;
   background: var(--sgpa-blue-soft);
   color: var(--sgpa-blue);
-  border: 1px solid rgba(11, 45, 105, 0.12);
+  border: 1px solid var(--sgpa-border-strong);
   font-weight: 850;
 }
 
@@ -273,23 +489,23 @@ a:focus-visible {
 .danger-btn {
   background: var(--sgpa-danger-bg);
   color: var(--sgpa-danger);
-  border: 1px solid rgba(220, 38, 38, 0.2);
+  border: 1px solid var(--sgpa-danger);
 }
 
 .danger-btn:hover {
-  background: #fecaca;
-  color: #991b1b;
+  background: var(--sgpa-danger);
+  color: var(--sgpa-on-accent);
 }
 
 .enable-btn {
   background: var(--sgpa-success-bg);
   color: var(--sgpa-success);
-  border: 1px solid rgba(21, 128, 61, 0.2);
+  border: 1px solid var(--sgpa-success);
 }
 
 .enable-btn:hover {
-  background: #bbf7d0;
-  color: #166534;
+  background: var(--sgpa-success);
+  color: var(--sgpa-on-accent);
 }
 
 table {
@@ -306,11 +522,41 @@ th {
 
 td {
   color: var(--sgpa-text-soft);
+  border-bottom: 1px solid var(--sgpa-border);
 }
 
 ::selection {
   background: var(--sgpa-yellow-soft);
   color: var(--sgpa-blue-dark);
+}
+
+/* Theme toggle — shared primitive, see ThemeToggle.svelte */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--sgpa-surface);
+  color: var(--sgpa-blue);
+  border: 1px solid var(--sgpa-border);
+  box-shadow: var(--sgpa-shadow-sm);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.theme-toggle:hover {
+  background: var(--sgpa-blue-soft);
+  transform: translateY(-1px);
+  box-shadow: var(--sgpa-shadow-sm);
+}
+
+.language-toggle {
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
 }
 
 @media (max-width: 720px) {
@@ -321,5 +567,22 @@ td {
   .content-wrapper,
   .container {
     width: min(100%, 100%);
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

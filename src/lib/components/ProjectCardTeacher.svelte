@@ -28,7 +28,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     padding: 1.25rem;
     border-radius: 22px;
     border: 1px solid var(--sgpa-border);
@@ -74,14 +74,14 @@
     padding: 0.72rem 1rem;
     border: none;
     border-radius: 999px;
-    background: linear-gradient(135deg, var(--sgpa-blue), var(--sgpa-blue-mid));
-    color: #ffffff;
+    background: var(--sgpa-accent-start);
+    color: var(--sgpa-on-accent);
     font-weight: 900;
     cursor: pointer;
   }
 
   .students-btn:hover {
-    background: linear-gradient(135deg, var(--sgpa-blue-dark), var(--sgpa-blue));
+    background: var(--sgpa-accent-hover);
   }
 
   @media (max-width: 640px) {

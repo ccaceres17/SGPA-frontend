@@ -21,21 +21,32 @@ export function buildLoginRequestInit(email, password) {
   };
 }
 
-export function classifyLoginError(status, data) {
-  const detail =
-    typeof data === 'string'
-      ? data
-      : data?.detail || data?.message || data?.error || '';
-
+/**
+ * Classifies an HTTP failure into a typed, user-facing outcome — mirrors the
+ * { type, message } shape used by src/lib/server/status-update.js. `message`
+ * is the English default (also what the test suite asserts); callers that
+ * need Spanish look up the localized copy for `type` via
+ * src/lib/i18n/messages.js#errors instead of using this string directly.
+ */
+export function classifyLoginError(status, _data) {
   const code = Number(status) || 0;
 
-  if (code === 400 || code === 401) return 'Incorrect credentials.';
-  if (code === 403) return 'You do not have permission to access the system.';
-  if (code === 422) return 'The login request format is not accepted by the API.';
-  if (code >= 500) return 'The server had an internal error. Please try again later.';
-  if (code === 0) return 'Could not connect to the server. Please try again.';
+  if (code === 400 || code === 401 || code === 422) {
+    return { type: 'invalid-credentials', message: 'Unable to sign in with the credentials provided.' };
+  }
 
-  return detail ? String(detail) : 'Could not complete login. Please try again.';
+  if (code === 403) {
+    return { type: 'forbidden', message: 'You do not have permission to access the system.' };
+  }
+
+  if (code >= 500 || code === 0) {
+    return {
+      type: 'service-unavailable',
+      message: 'The service is temporarily unavailable. Please try again shortly.'
+    };
+  }
+
+  return { type: 'invalid-credentials', message: 'Unable to sign in with the credentials provided.' };
 }
 
 async function parseResponseBody(response) {

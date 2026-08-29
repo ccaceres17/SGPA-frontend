@@ -1,6 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/components/Tokens.js';
 import { performLogin } from '$lib/server/login-request.js';
+import { getLocaleFromCookies } from '$lib/server/locale.js';
+import { translate } from '$lib/i18n/locale.js';
+import { messages } from '$lib/i18n/messages.js';
 import {
   buildSession,
   getRoleHome,
@@ -8,12 +11,6 @@ import {
   normalizeRole,
   setSession
 } from '$lib/server/auth-session.js';
-
-const ROLE_LABELS = {
-  students: 'Student',
-  teacher: 'Teacher',
-  coordinator: 'Coordinator'
-};
 
 function normalizeSelectedRole(role = '') {
   const normalized = normalizeRole(role);
@@ -33,17 +30,18 @@ export async function load({ cookies, url }) {
     throw redirect(303, getRoleHome(session.user.normalizedRole));
   }
 
+  const locale = getLocaleFromCookies(cookies);
   const reason = url.searchParams.get('reason');
   const logout = url.searchParams.get('logout');
 
   let notice = '';
 
   if (reason === 'expired') {
-    notice = 'Your session expired. Please log in again.';
+    notice = translate(messages, 'notices.sessionExpired', locale);
   } else if (reason === 'forbidden') {
-    notice = 'You do not have permission to access that module.';
+    notice = translate(messages, 'notices.forbiddenModule', locale);
   } else if (logout === '1') {
-    notice = 'Session closed successfully.';
+    notice = translate(messages, 'notices.loggedOut', locale);
   }
 
   return {
@@ -54,6 +52,9 @@ export async function load({ cookies, url }) {
 /** @type {import('./$types').Actions} */
 export const actions = {
   default: async ({ request, fetch, cookies }) => {
+    const locale = getLocaleFromCookies(cookies);
+    const t = (key) => translate(messages, key, locale);
+
     const formData = await request.formData();
 
     const email = String(formData.get('email') || formData.get('usuario') || '').trim();
@@ -62,7 +63,7 @@ export const actions = {
 
     if (!selectedRole) {
       return fail(400, {
-        error: 'Select a valid role.',
+        error: t('errors.missingRole'),
         email,
         selectedRole: 'students'
       });
@@ -70,7 +71,7 @@ export const actions = {
 
     if (!email || !password) {
       return fail(400, {
-        error: 'Enter your email and password.',
+        error: t('errors.missingFields'),
         email,
         selectedRole
       });
@@ -79,8 +80,15 @@ export const actions = {
     const loginResult = await performLogin(fetch, API_BASE_URL, email, password);
 
     if (!loginResult.ok) {
+      const ERROR_KEY_BY_TYPE = {
+        forbidden: 'errors.forbidden',
+        'service-unavailable': 'errors.serviceUnavailable'
+      };
+
+      const errorKey = ERROR_KEY_BY_TYPE[loginResult.error?.type] || 'errors.invalidCredentials';
+
       return fail(loginResult.status || 500, {
-        error: loginResult.error,
+        error: t(errorKey),
         email,
         selectedRole
       });
@@ -93,17 +101,9 @@ export const actions = {
 
     const user = loginResult.data?.user;
 
-    if (!accessToken) {
+    if (!accessToken || !user) {
       return fail(500, {
-        error: 'The API response did not include an access token.',
-        email,
-        selectedRole
-      });
-    }
-
-    if (!user) {
-      return fail(500, {
-        error: 'The API response did not include user data.',
+        error: t('errors.genericFailure'),
         email,
         selectedRole
       });
@@ -118,7 +118,7 @@ export const actions = {
 
     if (!apiRole) {
       return fail(500, {
-        error: 'The API response did not include a valid user role.',
+        error: t('errors.missingRoleInfo'),
         email,
         selectedRole
       });
@@ -126,7 +126,7 @@ export const actions = {
 
     if (apiRole !== selectedRole) {
       return fail(403, {
-        error: `You do not have permission to log in as ${ROLE_LABELS[selectedRole]}.`,
+        error: t('errors.roleMismatch'),
         email,
         selectedRole
       });
@@ -134,9 +134,9 @@ export const actions = {
 
     try {
       setSession(cookies, session);
-    } catch (error) {
+    } catch (_error) {
       return fail(500, {
-        error: error.message || 'Could not save the session.',
+        error: t('errors.sessionSaveFailed'),
         email,
         selectedRole
       });

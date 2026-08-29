@@ -1,14 +1,21 @@
 <script>
+  import { t } from '$lib/stores/locale.svelte.js';
+
   export let open = false;
-  export let title = 'Confirm action';
-  export let message = 'Are you sure you want to continue?';
+  export let title = '';
+  export let message = '';
   export let details = '';
-  export let confirmText = 'Confirm';
-  export let cancelText = 'Cancel';
+  export let confirmText = '';
+  export let cancelText = '';
   export let variant = 'info';
   export let loading = false;
   export let onConfirm = () => {};
   export let onCancel = () => {};
+
+  $: displayTitle = title || t('confirmModal.defaultTitle');
+  $: displayMessage = message || t('confirmModal.defaultMessage');
+  $: displayConfirmText = confirmText || t('confirmModal.confirm');
+  $: displayCancelText = cancelText || t('confirmModal.cancel');
 
   $: icon =
     variant === 'danger'
@@ -21,12 +28,12 @@
 
   $: eyebrow =
     variant === 'danger'
-      ? 'Critical confirmation'
+      ? t('confirmModal.eyebrowDanger')
       : variant === 'success'
-        ? 'Enrollment confirmation'
+        ? t('confirmModal.eyebrowSuccess')
         : variant === 'warning'
-          ? 'Confirmation required'
-          : 'Action confirmation';
+          ? t('confirmModal.eyebrowWarning')
+          : t('confirmModal.eyebrowInfo');
 
   function closeFromBackdrop(event) {
     if (event.target === event.currentTarget && !loading) {
@@ -37,7 +44,7 @@
 
 {#if open}
   <div class="modal-backdrop" role="presentation" onclick={closeFromBackdrop}>
-    <section
+    <div
       class="confirm-modal"
       class:danger={variant === 'danger'}
       class:success={variant === 'success'}
@@ -50,7 +57,7 @@
       <button
         type="button"
         class="close-btn"
-        aria-label="Close modal"
+        aria-label={t('confirmModal.closeModal')}
         onclick={onCancel}
         disabled={loading}
       >
@@ -69,8 +76,8 @@
 
       <div class="modal-copy">
         <span class="modal-eyebrow">{eyebrow}</span>
-        <h2 id="confirm-modal-title">{title}</h2>
-        <p>{message}</p>
+        <h2 id="confirm-modal-title">{displayTitle}</h2>
+        <p>{displayMessage}</p>
 
         {#if details}
           <div class="details-box">
@@ -86,7 +93,7 @@
           onclick={onCancel}
           disabled={loading}
         >
-          {cancelText}
+          {displayCancelText}
         </button>
 
         <button
@@ -99,10 +106,10 @@
           onclick={onConfirm}
           disabled={loading}
         >
-          {loading ? 'Processing...' : confirmText}
+          {loading ? t('confirmModal.processing') : displayConfirmText}
         </button>
       </div>
-    </section>
+    </div>
   </div>
 {/if}
 
@@ -114,10 +121,7 @@
     display: grid;
     place-items: center;
     padding: 1.25rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.18), transparent 24rem),
-      rgba(5, 15, 35, 0.62);
-    backdrop-filter: blur(10px);
+    background: rgba(5, 15, 35, 0.62);
     animation: fadeIn 0.18s ease both;
   }
 
@@ -126,11 +130,9 @@
     width: min(480px, 100%);
     padding: 1.55rem;
     border-radius: 30px;
-    background:
-      radial-gradient(circle at top right, rgba(232, 240, 251, 0.95), transparent 18rem),
-      #ffffff;
-    border: 1px solid rgba(219, 228, 240, 0.95);
-    box-shadow: 0 30px 90px rgba(8, 18, 40, 0.32);
+    background: var(--sgpa-surface-elevated);
+    border: 1px solid var(--sgpa-border);
+    box-shadow: var(--sgpa-shadow-lg);
     color: var(--sgpa-text, #172033);
     animation: modalIn 0.22s ease both;
     overflow: hidden;
@@ -141,19 +143,19 @@
     position: absolute;
     inset: 0 0 auto;
     height: 7px;
-    background: linear-gradient(90deg, var(--sgpa-blue, #0b2d69), var(--sgpa-yellow, #f2b705));
+    background: var(--sgpa-blue, #0d468d);
   }
 
   .confirm-modal.danger::before {
-    background: linear-gradient(90deg, #991b1b, #ef4444);
+    background: var(--sgpa-danger, #dc2626);
   }
 
   .confirm-modal.success::before {
-    background: linear-gradient(90deg, #15803d, #22c55e);
+    background: var(--sgpa-success, #15803d);
   }
 
   .confirm-modal.warning::before {
-    background: linear-gradient(90deg, var(--sgpa-blue, #0b2d69), var(--sgpa-yellow, #f2b705));
+    background: var(--sgpa-blue, #0d468d);
   }
 
   .close-btn {
@@ -165,7 +167,7 @@
     border: none;
     border-radius: 999px;
     background: rgba(15, 23, 42, 0.08);
-    color: var(--sgpa-blue-dark, #071f49);
+    color: var(--sgpa-blue-dark, #202f56);
     font-size: 1.4rem;
     line-height: 1;
     font-weight: 850;
@@ -191,7 +193,7 @@
   .modal-icon.info,
   .modal-icon.warning {
     background: var(--sgpa-blue-soft, #e8f0ff);
-    color: var(--sgpa-blue, #0b2d69);
+    color: var(--sgpa-blue, #0d468d);
     border: 1px solid rgba(11, 45, 105, 0.14);
   }
 
@@ -218,7 +220,7 @@
     padding: 0.34rem 0.72rem;
     border-radius: 999px;
     background: var(--sgpa-yellow-soft, #fff7d6);
-    color: var(--sgpa-blue, #0b2d69);
+    color: var(--sgpa-blue, #0d468d);
     font-size: 0.72rem;
     font-weight: 950;
     letter-spacing: 0.08em;
@@ -228,7 +230,7 @@
 
   h2 {
     margin: 0;
-    color: var(--sgpa-blue-dark, #071f49);
+    color: var(--sgpa-blue-dark, #202f56);
     font-size: clamp(1.55rem, 4vw, 2rem);
     line-height: 1.08;
     font-weight: 950;
@@ -248,7 +250,7 @@
     border-radius: 18px;
     background: var(--sgpa-surface-soft, #f8fafc);
     border: 1px solid var(--sgpa-border, #dbe4f0);
-    color: var(--sgpa-blue-dark, #071f49);
+    color: var(--sgpa-blue-dark, #202f56);
     font-weight: 850;
     line-height: 1.55;
   }
@@ -278,8 +280,8 @@
   }
 
   .modal-btn.cancel {
-    background: #ffffff;
-    color: var(--sgpa-blue, #0b2d69);
+    background: var(--sgpa-surface);
+    color: var(--sgpa-blue, #0d468d);
     border: 1px solid var(--sgpa-border-strong, #c8d7eb);
   }
 
@@ -289,17 +291,17 @@
 
   .modal-btn.confirm.info,
   .modal-btn.confirm.warning {
-    background: linear-gradient(135deg, var(--sgpa-blue, #0b2d69), var(--sgpa-blue-mid, #174ea6));
+    background: var(--sgpa-blue, #0d468d);
     color: #ffffff;
   }
 
   .modal-btn.confirm.success {
-    background: linear-gradient(135deg, #15803d, #166534);
+    background: var(--sgpa-success, #15803d);
     color: #ffffff;
   }
 
   .modal-btn.confirm.danger {
-    background: linear-gradient(135deg, #dc2626, #991b1b);
+    background: var(--sgpa-danger, #dc2626);
     color: #ffffff;
   }
 

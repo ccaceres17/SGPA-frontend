@@ -4,6 +4,7 @@
   import DashboardStats from '$lib/components/Projects.svelte';
   import SideBar from '$lib/components/CoordinatorSideBar.svelte';
   import ProjectCardsDataTable from '$lib/components/ProjectCardDatatable.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   export let data;
 
@@ -12,14 +13,14 @@
 
   $: stats = [
     {
-      label: 'Total projects',
+      label: t('pages.coordinatorProjects.totalProjects'),
       value: data?.totalProjects || 0,
       icon: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
       bgColor: 'var(--sgpa-blue-soft)',
       color: 'var(--sgpa-blue)'
     },
     {
-      label: 'Visible records',
+      label: t('pages.coordinatorProjects.visibleRecords'),
       value: rows.length,
       icon: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>`,
       bgColor: 'var(--sgpa-yellow-soft)',
@@ -35,20 +36,18 @@
   <div class="content-wrapper">
     <header class="main-header">
       <div class="header-copy">
-        <span class="eyebrow">Coordinator module</span>
-        <h1>Project management</h1>
-        <p>
-          View, manage, create academic projects, and generate project reports.
-        </p>
+        <span class="eyebrow">{t('sidebar.coordinatorModuleLabel')}</span>
+        <h1>{t('pages.coordinatorProjects.managementHeading')}</h1>
+        <p>{t('pages.coordinatorProjects.managementDescription')}</p>
       </div>
 
       <div class="header-actions">
         <a class="report-btn" href="/coordinator/projects/report" target="_blank" rel="noopener noreferrer">
-          PDF report
+          {t('pages.coordinatorProjects.pdfReport')}
         </a>
 
         <a class="add-btn" href="/coordinator/projects/create">
-          Add project
+          {t('pages.coordinatorProjects.addProject')}
         </a>
       </div>
     </header>
@@ -62,20 +61,20 @@
     <section class="list-section">
       <div class="section-title">
         <div>
-          <span class="section-kicker">List</span>
-          <h2>Project list</h2>
-          <p>Review registered projects, their status, and assigned teacher.</p>
+          <span class="section-kicker">{t('ui.list')}</span>
+          <h2>{t('pages.coordinatorProjects.heading')}</h2>
+          <p>{t('pages.coordinatorProjects.description')}</p>
         </div>
 
-        <span class="badge">{rows.length} records</span>
+        <span class="badge">{rows.length} {t('ui.records')}</span>
       </div>
 
       <ProjectCardsDataTable
         {rows}
-        title="Projects"
-        badgeColor="#0b2d69"
-        emptyMessage="No projects to display."
-        searchPlaceholder="Search project by name, teacher, or status..."
+        title={t('sidebar.projects')}
+        badgeColor="#0d468d"
+        emptyMessage={t('pages.coordinatorProjects.emptyMessage')}
+        searchPlaceholder={t('pages.coordinatorProjects.searchPlaceholder')}
       />
     </section>
   </div>
@@ -87,9 +86,6 @@
   main {
     min-height: 80vh;
     padding: 2rem 1rem 3rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.12), transparent 22rem),
-      linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 100%);
   }
 
   .content-wrapper {
@@ -105,9 +101,7 @@
     margin-bottom: 1.4rem;
     padding: 1.6rem;
     border-radius: 28px;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 18rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -172,8 +166,8 @@
   }
 
   .report-btn {
-    background: linear-gradient(135deg, var(--sgpa-blue), var(--sgpa-blue-mid));
-    color: #ffffff;
+    background: var(--sgpa-accent-start);
+    color: var(--sgpa-on-accent);
     border: 1px solid rgba(11, 45, 105, 0.22);
     box-shadow: 0 14px 28px rgba(11, 45, 105, 0.18);
   }
@@ -188,7 +182,7 @@
     padding: 0 0.38rem;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.16);
-    color: #ffffff;
+    color: var(--sgpa-on-accent);
     font-size: 0.68rem;
     font-weight: 950;
     letter-spacing: 0.04em;
@@ -196,13 +190,13 @@
 
   .report-btn:hover {
     transform: translateY(-1px);
-    background: linear-gradient(135deg, var(--sgpa-blue-dark), var(--sgpa-blue));
+    background: var(--sgpa-accent-hover);
     border-color: rgba(11, 45, 105, 0.34);
     box-shadow: 0 18px 34px rgba(11, 45, 105, 0.24);
   }
 
   .add-btn {
-    background: linear-gradient(135deg, #fff7d6, #ffffff);
+    background: var(--sgpa-yellow-soft);
     color: var(--sgpa-blue);
     border: 1px solid rgba(242, 183, 5, 0.38);
     box-shadow: 0 10px 22px rgba(11, 45, 105, 0.08);
@@ -217,7 +211,7 @@
     height: 24px;
     border-radius: 999px;
     background: var(--sgpa-blue);
-    color: #ffffff;
+    color: var(--sgpa-on-accent);
     font-size: 1rem;
     font-weight: 950;
     line-height: 1;
@@ -291,7 +285,7 @@
   }
 
   :global(.project-card) {
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border-radius: 24px;
     border: 1px solid var(--sgpa-border);
     border-left: 6px solid var(--sgpa-blue);

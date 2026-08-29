@@ -1,14 +1,16 @@
 <script>
+  import { t } from '$lib/stores/locale.svelte.js';
+
   export let user = {};
 
   function getRoleConfig(roleId) {
     const configs = {
-      1: { name: "Student", color: "#e87500", label: "Undergraduate" },
-      3: { name: "Teacher", color: "#153f8f", label: "Teacher / Investigador" },
-      4: { name: "Coordinator", color: "#0b2d69", label: "Academic Management" }
+      1: { name: t('pages.profile.roleStudent'), color: '#e8680d', label: t('pages.profile.labelUndergraduate') },
+      3: { name: t('pages.profile.roleTeacher'), color: '#0099cc', label: t('pages.profile.labelTeacher') },
+      4: { name: t('pages.profile.roleCoordinator'), color: '#202f56', label: t('pages.profile.labelCoordinator') }
     };
 
-    return configs[roleId] || { name: "User", color: "#5f6f89", label: "System" };
+    return configs[roleId] || { name: t('pages.profile.roleUser'), color: '#5f6f89', label: t('pages.profile.labelSystem') };
   }
 
   $: role = getRoleConfig(user.id_role);
@@ -21,8 +23,8 @@
     </div>
 
     <div class="user-meta">
-      <span class="profile-eyebrow">Institutional profile</span>
-      <h1>{user.first_name || 'User'} {user.last_name || ''}</h1>
+      <span class="profile-eyebrow">{t('pages.profile.institutionalProfile')}</span>
+      <h1>{user.first_name || t('pages.profile.roleUser')} {user.last_name || ''}</h1>
 
       <span class="role-tag" style="background-color: {role.color}15; color: {role.color}">
         {role.name} · {role.label}
@@ -32,31 +34,31 @@
 
   <div class="info-sections">
     <section class="data-group">
-      <h3><span class="icon">📧</span> Contact and access</h3>
+      <h3><span class="icon">📧</span> {t('pages.profile.contactAndAccess')}</h3>
 
       <div class="field">
-        <span class="label">Institutional email</span>
-        <span class="value">{user.email || 'Not registered'}</span>
+        <span class="label">{t('pages.profile.institutionalEmail')}</span>
+        <span class="value">{user.email || t('pages.profile.notRegistered')}</span>
       </div>
 
       <div class="field">
-        <span class="label">Contact phone</span>
-        <span class="value">{user.phone || 'Not registered'}</span>
+        <span class="label">{t('pages.profile.contactPhone')}</span>
+        <span class="value">{user.phone || t('pages.profile.notRegistered')}</span>
       </div>
     </section>
 
     <section class="data-group">
-      <h3><span class="icon">🔑</span> Identification</h3>
+      <h3><span class="icon">🔑</span> {t('pages.profile.identification')}</h3>
 
       <div class="field">
-        <span class="label">Account status</span>
+        <span class="label">{t('pages.profile.accountStatus')}</span>
         <span class="status-indicator {user.is_active ? 'active' : 'inactive'}">
-          {user.is_active ? '● Active' : '○ Inactive'}
+          {user.is_active ? `● ${t('ui.activeStatus')}` : `○ ${t('ui.inactive')}`}
         </span>
       </div>
 
       <div class="field">
-        <span class="label">Assigned role</span>
+        <span class="label">{t('pages.profile.assignedRole')}</span>
         <span class="value">{role.name}</span>
       </div>
     </section>
@@ -65,7 +67,7 @@
 
 <style>
   .profile-card {
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border-radius: 28px;
     box-shadow: var(--sgpa-shadow-md);
     overflow: hidden;
@@ -79,9 +81,7 @@
     align-items: center;
     gap: 1.5rem;
     padding: 2rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 16rem),
-      linear-gradient(135deg, #ffffff, var(--sgpa-blue-soft));
+    background: var(--sgpa-surface);
     border-left: 10px solid;
     border-bottom: 1px solid var(--sgpa-border);
   }

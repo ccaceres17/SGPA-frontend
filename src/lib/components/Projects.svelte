@@ -32,7 +32,7 @@
     min-height: 108px;
     padding: 1.25rem;
     border-radius: 22px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-sm);
     transition:

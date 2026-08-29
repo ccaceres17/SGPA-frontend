@@ -3,16 +3,22 @@
   import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/StudentSideBar.svelte';
   import Dashboard from '$lib/components/Dashboard.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
+
+  let { data } = $props();
 </script>
 
 <Header />
 <SideBar />
 
 <Dashboard
-  roleName="Student"
-  eyebrow="Student module"
-  title="Academic projects overview"
-  description="Explore available projects, review your enrollments, and check your personal information within SGPA."
+  eyebrow={t('dashboard.student.eyebrow')}
+  title={t('dashboard.student.title')}
+  description={t('dashboard.student.description')}
+  stats={data.stats}
+  extraStat={{ labelKey: 'dashboard.stats.enrolledProjects', value: data.totalEnrolled }}
+  recentProjects={data.recentProjects}
+  error={data.error}
 />
 
 <Footer />

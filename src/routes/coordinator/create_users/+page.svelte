@@ -2,6 +2,7 @@
   import Header from '$lib/components/Header_St.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/CoordinatorSideBar.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   export let form;
 
@@ -19,16 +20,13 @@
   <div class="content-wrapper">
     <header class="main-header">
       <div class="header-copy">
-        <span class="eyebrow">Coordinator module</span>
-        <h1>Create user</h1>
-        <p>
-          Register students and teachers within SGPA while keeping the information
-          organized for academic management.
-        </p>
+        <span class="eyebrow">{t('sidebar.coordinatorModuleLabel')}</span>
+        <h1>{t('pages.createUsers.heading')}</h1>
+        <p>{t('pages.createUsers.description')}</p>
       </div>
 
       <div class="header-badge">
-        User management
+        {t('pages.createUsers.userManagement')}
       </div>
     </header>
 
@@ -43,85 +41,85 @@
     <section class="form-section">
       <div class="section-title">
         <div>
-          <h2>Registration form</h2>
-          <p>Fill in the basic information for the user to be created.</p>
+          <h2>{t('pages.createUsers.formHeading')}</h2>
+          <p>{t('pages.createUsers.formDescription')}</p>
         </div>
 
-        <span class="badge">Coordinator</span>
+        <span class="badge">{t('footer.coordinator')}</span>
       </div>
 
       <div class="form-card">
         <form method="POST" class="user-form">
           <div class="form-grid">
             <div class="field">
-              <label for="first_name">First names</label>
+              <label for="first_name">{t('pages.createUsers.firstNames')}</label>
               <input
                 id="first_name"
                 name="first_name"
                 type="text"
-                placeholder="Example: Alexander"
+                placeholder={t('pages.createUsers.firstNamePlaceholder')}
                 value={getValue('first_name')}
                 required
               />
             </div>
 
             <div class="field">
-              <label for="last_name">Last names</label>
+              <label for="last_name">{t('pages.createUsers.lastNames')}</label>
               <input
                 id="last_name"
                 name="last_name"
                 type="text"
-                placeholder="Example: Gomez"
+                placeholder={t('pages.createUsers.lastNamePlaceholder')}
                 value={getValue('last_name')}
                 required
               />
             </div>
 
             <div class="field">
-              <label for="email">Email address</label>
+              <label for="email">{t('pages.createUsers.emailAddress')}</label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="Example: user@email.com"
+                placeholder={t('pages.createUsers.emailPlaceholder')}
                 value={getValue('email')}
                 required
               />
             </div>
 
             <div class="field">
-              <label for="phone">Phone</label>
+              <label for="phone">{t('ui.phone')}</label>
               <input
                 id="phone"
                 name="phone"
                 type="text"
-                placeholder="Example: 3001234567"
+                placeholder={t('pages.createUsers.phonePlaceholder')}
                 value={getValue('phone')}
                 required
               />
             </div>
 
             <div class="field">
-              <label for="password">Password</label>
+              <label for="password">{t('login.passwordLabel')}</label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Enter a password"
+                placeholder={t('pages.createUsers.passwordPlaceholder')}
                 autocomplete="new-password"
                 required
               />
             </div>
 
             <div class="field">
-              <label for="id_role">User type</label>
+              <label for="id_role">{t('pages.createUsers.userType')}</label>
               <select id="id_role" name="id_role" required>
-                <option value="">Select a role</option>
+                <option value="">{t('pages.createUsers.selectRole')}</option>
                 <option value="3" selected={String(getValue('id_role')) === '3'}>
-                  Teacher
+                  {t('footer.teacher')}
                 </option>
                 <option value="1" selected={String(getValue('id_role')) === '1'}>
-                  Student
+                  {t('footer.student')}
                 </option>
               </select>
             </div>
@@ -137,15 +135,15 @@
               />
 
               <span>
-                <strong>Active user</strong>
-                <small>Allows the user to appear enabled within the system.</small>
+                <strong>{t('pages.createUsers.activeUser')}</strong>
+                <small>{t('pages.createUsers.activeUserHint')}</small>
               </span>
             </label>
           </div>
 
           <div class="form-actions">
-            <button type="reset" class="clear-btn">Clear form</button>
-            <button type="submit" class="save-btn">Create user</button>
+            <button type="reset" class="clear-btn">{t('pages.createUsers.clearForm')}</button>
+            <button type="submit" class="save-btn">{t('pages.createUsers.createUser')}</button>
           </div>
         </form>
       </div>
@@ -159,9 +157,6 @@
   main {
     min-height: 80vh;
     padding: 2rem 1rem 3rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.12), transparent 22rem),
-      linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 100%);
   }
 
   .content-wrapper {
@@ -177,9 +172,7 @@
     margin-bottom: 1.6rem;
     padding: 1.6rem;
     border-radius: 28px;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 18rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -218,7 +211,7 @@
     flex: 0 0 auto;
     padding: 0.75rem 1rem;
     border-radius: 999px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     border: 1px solid var(--sgpa-border);
     font-weight: 950;
@@ -266,7 +259,7 @@
   }
 
   .form-card {
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border-radius: 28px;
     padding: clamp(1.2rem, 3vw, 2rem);
     box-shadow: var(--sgpa-shadow-md);
@@ -303,7 +296,7 @@
     padding: 0.85rem 1rem;
     border: 1px solid var(--sgpa-border);
     border-radius: 14px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-text);
     outline: none;
   }
@@ -370,7 +363,7 @@
   }
 
   .clear-btn {
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     border: 1px solid var(--sgpa-border-strong);
   }

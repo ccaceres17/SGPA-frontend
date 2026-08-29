@@ -2,10 +2,14 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import { onDestroy, onMount } from 'svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
+  import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+  import LanguageToggle from '$lib/components/LanguageToggle.svelte';
 
   let remaining = $state(0);
   let timer = null;
   let loggingOut = $state(false);
+  let isOpen = $state(false);
 
   let session = $derived(page.data?.session ?? null);
   let user = $derived(session?.user ?? null);
@@ -13,6 +17,9 @@
   let isWarning = $derived(remaining > 0 && remaining <= 300);
 
   let userLabel = $derived(user?.displayName || `${user?.first_name || 'User'} - ${user?.roleLabel || 'User'}`);
+  let initials = $derived(
+    (user?.first_name?.[0] || user?.email?.[0] || 'U').toUpperCase()
+  );
 
   function calculateRemaining() {
     if (!exp) {
@@ -39,10 +46,19 @@
       .join(':');
   }
 
+  function toggleMenu() {
+    isOpen = !isOpen;
+  }
+
+  function closeMenu() {
+    isOpen = false;
+  }
+
   async function logout(reason = 'manual') {
     if (loggingOut) return;
 
     loggingOut = true;
+    closeMenu();
 
     try {
       await fetch('/logout', {
@@ -77,87 +93,198 @@
 </script>
 
 {#if session && user}
-  <div class="session-box" class:warning={isWarning}>
-    <div class="session-copy">
-      <span class="user-role-label">{userLabel}</span>
-      <strong>Session expires in {formatRemaining(remaining)}</strong>
-      <small>{user.email}</small>
-    </div>
-
+  <div class="account-widget">
     <button
       type="button"
-      class="logout-btn"
-      onclick={() => logout('manual')}
-      disabled={loggingOut}
+      class="account-trigger"
+      onclick={toggleMenu}
+      aria-expanded={isOpen}
+      aria-haspopup="true"
+      aria-label={`${t('session.accountLabel')}: ${userLabel}`}
     >
-      {loggingOut ? 'Signing out...' : 'Logout'}
+      <span class="avatar" aria-hidden="true">{initials}</span>
     </button>
+
+    {#if isOpen}
+      <button
+        type="button"
+        class="account-overlay"
+        aria-label={t('nav.closeMenu')}
+        onclick={closeMenu}
+      ></button>
+
+      <div class="account-menu" role="menu">
+        <div class="account-summary">
+          <span class="avatar avatar-lg" aria-hidden="true">{initials}</span>
+          <div class="account-summary-text">
+            <strong>{userLabel}</strong>
+            <small>{user.email}</small>
+          </div>
+        </div>
+
+        <p class="session-expiry" class:warning={isWarning}>
+          {t('session.expiresIn', { time: formatRemaining(remaining) })}
+        </p>
+
+        <div class="settings-row">
+          <span class="settings-label">{t('settings.title')}</span>
+          <div class="settings-controls">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="logout-btn"
+          onclick={() => logout('manual')}
+          disabled={loggingOut}
+        >
+          {loggingOut ? t('session.loggingOut') : t('session.logout')}
+        </button>
+      </div>
+    {/if}
   </div>
 {/if}
 
 <style>
-  .session-box {
+  .account-widget {
+    position: relative;
+  }
+
+  .account-trigger {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid var(--sgpa-border);
+    background: var(--sgpa-surface);
+    box-shadow: var(--sgpa-shadow-sm);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .account-trigger:hover {
+    background: var(--sgpa-blue-soft);
+  }
+
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: var(--sgpa-blue);
+    color: #ffffff;
+    font-weight: 950;
+    font-size: 0.82rem;
+  }
+
+  .avatar-lg {
+    width: 44px;
+    height: 44px;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  .account-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    border: none;
+    background: transparent;
+    cursor: default;
+  }
+
+  .account-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 40;
+    width: 260px;
+    padding: 1rem;
+    border-radius: 20px;
+    background: var(--sgpa-surface-elevated);
+    border: 1px solid var(--sgpa-border);
+    box-shadow: var(--sgpa-shadow-lg);
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .account-summary {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    padding: 0.55rem 0.65rem;
-    border-radius: 18px;
-    background: #ffffff;
-    border: 1px solid var(--sgpa-border);
-    box-shadow: var(--sgpa-shadow-sm);
-  }
-
-  .session-box.warning {
-    background: var(--sgpa-warning-bg, #fff7d6);
-    border-color: rgba(183, 121, 31, 0.3);
-  }
-
-  .session-copy {
-    display: grid;
-    gap: 0.1rem;
+    gap: 0.7rem;
     min-width: 0;
   }
 
-  .user-role-label {
-    width: fit-content;
-    max-width: 230px;
-    padding: 0.28rem 0.68rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, var(--sgpa-blue-soft), #ffffff);
-    color: var(--sgpa-blue);
-    border: 1px solid rgba(11, 45, 105, 0.14);
-    font-size: 0.74rem;
-    font-weight: 950;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .account-summary-text {
+    display: grid;
+    min-width: 0;
   }
 
-  .session-copy strong {
+  .account-summary-text strong {
     color: var(--sgpa-blue-dark);
-    font-size: 0.82rem;
-    line-height: 1.25;
+    font-size: 0.92rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .session-copy small {
-    max-width: 190px;
+  .account-summary-text small {
     color: var(--sgpa-text-soft);
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     overflow: hidden;
-    white-space: nowrap;
     text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .session-expiry {
+    margin: 0;
+    padding: 0.5rem 0.65rem;
+    border-radius: 12px;
+    background: var(--sgpa-surface-soft);
+    color: var(--sgpa-text-soft);
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .session-expiry.warning {
+    background: var(--sgpa-warning-bg, #fff7d6);
+    color: var(--sgpa-warning, #b7791f);
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--sgpa-border);
+  }
+
+  .settings-label {
+    color: var(--sgpa-text-soft);
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .settings-controls {
+    display: inline-flex;
+    gap: 0.4rem;
   }
 
   .logout-btn {
-    min-height: 38px;
-    padding: 0.58rem 0.9rem;
+    min-height: 40px;
+    padding: 0.55rem 0.9rem;
     border-radius: 999px;
     border: none;
-    background: linear-gradient(135deg, var(--sgpa-danger, #dc2626), #991b1b);
+    background: var(--sgpa-danger, #dc2626);
     color: #ffffff;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     font-weight: 950;
     cursor: pointer;
   }
@@ -171,20 +298,9 @@
     cursor: not-allowed;
   }
 
-  @media (max-width: 760px) {
-    .session-box {
-      width: 100%;
-      align-items: flex-start;
-      flex-direction: column;
-    }
-
-    .logout-btn {
-      width: 100%;
-    }
-
-    .user-role-label,
-    .session-copy small {
-      max-width: 100%;
+  @media (max-width: 480px) {
+    .account-menu {
+      width: min(280px, calc(100vw - 32px));
     }
   }
 </style>

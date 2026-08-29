@@ -4,6 +4,7 @@
   import DashboardStats from '$lib/components/Projects.svelte';
   import SideBar from '$lib/components/StudentSideBar.svelte';
   import ProjectCardsDataTable from '$lib/components/ProjectCardDatatable.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   export let data;
   export let form;
@@ -14,7 +15,7 @@
 
   $: stats = [
     {
-      label: 'Available projects',
+      label: t('pages.studentProjects.heading'),
       value: data.totalProjects || 0,
       icon: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
       bgColor: 'var(--sgpa-blue-soft)',
@@ -30,17 +31,17 @@
   <div class="content-wrapper">
     <header class="main-header">
       <div>
-        <span class="eyebrow">Student module</span>
-        <h1>Available projects</h1>
-        <p>View available academic projects, enroll when applicable, and generate a report.</p>
+        <span class="eyebrow">{t('sidebar.studentModuleLabel')}</span>
+        <h1>{t('pages.studentProjects.heading')}</h1>
+        <p>{t('pages.studentProjects.description')}</p>
       </div>
 
       <div class="header-actions">
         <a class="report-btn" href="/students/projects/report" target="_blank" rel="noopener noreferrer">
-          PDF report
+          {t('pages.studentProjects.pdfReport')}
         </a>
 
-        <span class="header-label">Student</span>
+        <span class="header-label">{t('pages.studentProjects.headerLabel')}</span>
       </div>
     </header>
 
@@ -56,10 +57,10 @@
 
     <ProjectCardsDataTable
       {rows}
-      title="Available projects"
+      title={t('pages.studentProjects.heading')}
       badgeColor="var(--sgpa-blue)"
-      emptyMessage="No projects available."
-      searchPlaceholder="Search project by name, date, or status..."
+      emptyMessage={t('pages.studentProjects.emptyMessage')}
+      searchPlaceholder={t('pages.studentProjects.searchPlaceholder')}
     />
   </div>
 </main>
@@ -70,9 +71,6 @@
   main {
     min-height: 80vh;
     padding: 2rem 1rem 3rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.12), transparent 22rem),
-      linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 100%);
   }
 
   .content-wrapper {
@@ -88,9 +86,7 @@
     margin-bottom: 1.4rem;
     padding: 1.6rem;
     border-radius: 28px;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 18rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -139,8 +135,8 @@
     min-height: 44px;
     padding: 0.72rem 1.12rem;
     border-radius: 999px;
-    background: linear-gradient(135deg, var(--sgpa-blue), var(--sgpa-blue-mid));
-    color: #ffffff;
+    background: var(--sgpa-accent-start);
+    color: var(--sgpa-on-accent);
     border: 1px solid rgba(11, 45, 105, 0.22);
     font-weight: 950;
     box-shadow: 0 14px 28px rgba(11, 45, 105, 0.18);
@@ -167,7 +163,7 @@
     padding: 0 0.38rem;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.16);
-    color: #ffffff;
+    color: var(--sgpa-on-accent);
     font-size: 0.68rem;
     font-weight: 950;
     letter-spacing: 0.04em;
@@ -175,7 +171,7 @@
 
   .report-btn:hover {
     transform: translateY(-1px);
-    background: linear-gradient(135deg, var(--sgpa-blue-dark), var(--sgpa-blue));
+    background: var(--sgpa-accent-hover);
     border-color: rgba(11, 45, 105, 0.34);
     box-shadow: 0 18px 34px rgba(11, 45, 105, 0.24);
   }
@@ -185,7 +181,7 @@
     min-height: 44px;
     padding: 0.72rem 1.08rem;
     border-radius: 999px;
-    background: linear-gradient(135deg, #fff7d6, #ffffff);
+    background: var(--sgpa-yellow-soft);
     color: var(--sgpa-blue);
     border: 1px solid rgba(242, 183, 5, 0.38);
     font-weight: 950;

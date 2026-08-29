@@ -1,9 +1,11 @@
 <script>
+  import { t } from '$lib/stores/locale.svelte.js';
+
   export let rows = [];
-  export let title = 'Projects';
+  export let title = '';
   export let badgeColor = 'var(--sgpa-blue)';
-  export let emptyMessage = 'No projects to display.';
-  export let searchPlaceholder = 'Search project by name...';
+  export let emptyMessage = '';
+  export let searchPlaceholder = '';
 
   let search = '';
   let currentPage = 1;
@@ -44,12 +46,12 @@
 <section class="list-section">
   <div class="section-title">
     <div>
-      <span class="section-kicker">List</span>
-      <h2>{title}</h2>
+      <span class="section-kicker">{t('ui.list')}</span>
+      <h2>{title || t('sidebar.projects')}</h2>
     </div>
 
     <span class="badge" style={`--badge-color:${badgeColor}`}>
-      {filteredRows.length} records
+      {filteredRows.length} {t('ui.records')}
     </span>
   </div>
 
@@ -58,9 +60,9 @@
       <input
         type="text"
         bind:value={search}
-        placeholder={searchPlaceholder}
+        placeholder={searchPlaceholder || t('ui.search')}
         class="search-input"
-        aria-label={searchPlaceholder}
+        aria-label={searchPlaceholder || t('ui.search')}
       />
     </div>
 
@@ -73,15 +75,15 @@
         {/each}
       {:else}
         <div class="empty-row">
-          <strong>No results</strong>
-          <span>{emptyMessage}</span>
+          <strong>{t('ui.noResults')}</strong>
+          <span>{emptyMessage || t('ui.noData')}</span>
         </div>
       {/if}
     </div>
 
     <div class="table-footer">
       <span>
-        Showing {paginatedRows.length} of {filteredRows.length} records
+        {t('ui.showingOfRecords', { shown: paginatedRows.length, total: filteredRows.length })}
       </span>
 
       <div class="pagination">
@@ -90,17 +92,17 @@
           onclick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1}
         >
-          Previous
+          {t('ui.previous')}
         </button>
 
-        <span>Page {currentPage} of {totalPages}</span>
+        <span>{t('ui.pageOf', { current: currentPage, total: totalPages })}</span>
 
         <button
           type="button"
           onclick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
-          Next
+          {t('ui.next')}
         </button>
       </div>
     </div>
@@ -146,7 +148,7 @@
     min-height: 34px;
     padding: 0.45rem 0.95rem;
     border-radius: 999px;
-    color: #ffffff;
+    color: var(--sgpa-on-accent);
     background: var(--badge-color, var(--sgpa-blue));
     font-size: 0.82rem;
     font-weight: 900;
@@ -156,7 +158,7 @@
   .table-card {
     overflow: hidden;
     border-radius: 26px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -178,7 +180,7 @@
     border-radius: 999px;
     outline: none;
     color: var(--sgpa-text);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     font-size: 0.96rem;
     transition:
       border-color 0.2s ease,
@@ -188,7 +190,7 @@
 
   .search-input:focus {
     border-color: var(--sgpa-yellow);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     box-shadow: var(--sgpa-focus);
   }
 
@@ -213,7 +215,7 @@
     border-radius: 20px;
     color: var(--sgpa-muted);
     text-align: center;
-    background: #ffffff;
+    background: var(--sgpa-surface);
   }
 
   .empty-row strong {
@@ -228,7 +230,7 @@
     gap: 1rem;
     padding: 1rem 1.15rem;
     border-top: 1px solid var(--sgpa-border);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-text-soft);
     flex-wrap: wrap;
   }
@@ -245,7 +247,7 @@
     padding: 0.55rem 0.9rem;
     border-radius: 999px;
     border: 1px solid var(--sgpa-border);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     font-weight: 850;
     cursor: pointer;
@@ -266,7 +268,7 @@
   }
 
   :global(.project-card) {
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border-radius: 24px;
     border: 1px solid var(--sgpa-border);
     border-left: 6px solid var(--sgpa-blue);
@@ -352,14 +354,14 @@
     padding: 0.72rem 1rem;
     border: none;
     border-radius: 999px;
-    background: linear-gradient(135deg, var(--sgpa-blue), var(--sgpa-blue-mid));
-    color: #ffffff;
+    background: var(--sgpa-accent-start);
+    color: var(--sgpa-on-accent);
     font-weight: 900;
     cursor: pointer;
   }
 
   :global(.action-btn:hover) {
-    background: linear-gradient(135deg, var(--sgpa-blue-dark), var(--sgpa-blue));
+    background: var(--sgpa-accent-hover);
   }
 
   :global(.joined-badge),

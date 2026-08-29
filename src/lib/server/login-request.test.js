@@ -67,18 +67,21 @@ test('invalid credentials (401) are reported as a friendly, non-leaking error', 
 
   assert.equal(result.ok, false);
   assert.equal(result.status, 401);
-  assert.equal(result.error, 'Incorrect credentials.');
-  assert.ok(!result.error.includes('wrong-password'), 'error message must not echo the password');
+  assert.equal(result.error.type, 'invalid-credentials');
+  assert.equal(result.error.message, 'Unable to sign in with the credentials provided.');
+  assert.ok(!result.error.message.includes('wrong-password'), 'error message must not echo the password');
 });
 
-test('validation errors (422) are reported distinctly from credential errors', async () => {
+test('validation errors (422) are reported without leaking API/format details', async () => {
   const fetchMock = async () => jsonResponse(422, { detail: 'email: field required' });
 
   const result = await performLogin(fetchMock, BASE_URL, '', 'password123');
 
   assert.equal(result.ok, false);
   assert.equal(result.status, 422);
-  assert.equal(result.error, 'The login request format is not accepted by the API.');
+  assert.equal(result.error.type, 'invalid-credentials');
+  assert.equal(result.error.message, 'Unable to sign in with the credentials provided.');
+  assert.ok(!/api/i.test(result.error.message), 'error message must not mention the API');
 });
 
 test('a network failure is reported without throwing', async () => {
@@ -90,16 +93,24 @@ test('a network failure is reported without throwing', async () => {
 
   assert.equal(result.ok, false);
   assert.equal(result.status, 0);
-  assert.equal(result.error, 'Could not connect to the server. Please try again.');
+  assert.equal(result.error.type, 'service-unavailable');
+  assert.equal(
+    result.error.message,
+    'The service is temporarily unavailable. Please try again shortly.'
+  );
 });
 
-test('a 5xx server error is reported as a server error', async () => {
+test('a 5xx server error is reported as a service-unavailable error', async () => {
   const fetchMock = async () => jsonResponse(500, { detail: 'internal error' });
 
   const result = await performLogin(fetchMock, BASE_URL, 'user@example.com', 'password123');
 
   assert.equal(result.ok, false);
-  assert.equal(result.error, 'The server had an internal error. Please try again later.');
+  assert.equal(result.error.type, 'service-unavailable');
+  assert.equal(
+    result.error.message,
+    'The service is temporarily unavailable. Please try again shortly.'
+  );
 });
 
 test('buildLoginUrl targets the documented C4 endpoint with no query string', () => {
@@ -115,10 +126,25 @@ test('buildLoginRequestInit never includes credentials outside the JSON body', (
   assert.equal(Object.prototype.hasOwnProperty.call(init, 'url'), false);
 });
 
-test('classifyLoginError maps status codes to distinct, non-leaking messages', () => {
-  assert.equal(classifyLoginError(401, null), 'Incorrect credentials.');
-  assert.equal(classifyLoginError(403, null), 'You do not have permission to access the system.');
-  assert.equal(classifyLoginError(422, null), 'The login request format is not accepted by the API.');
-  assert.equal(classifyLoginError(500, null), 'The server had an internal error. Please try again later.');
-  assert.equal(classifyLoginError(0, null), 'Could not connect to the server. Please try again.');
+test('classifyLoginError maps status codes to distinct, non-leaking { type, message } outcomes', () => {
+  assert.deepEqual(classifyLoginError(401, null), {
+    type: 'invalid-credentials',
+    message: 'Unable to sign in with the credentials provided.'
+  });
+  assert.deepEqual(classifyLoginError(403, null), {
+    type: 'forbidden',
+    message: 'You do not have permission to access the system.'
+  });
+  assert.deepEqual(classifyLoginError(422, null), {
+    type: 'invalid-credentials',
+    message: 'Unable to sign in with the credentials provided.'
+  });
+  assert.deepEqual(classifyLoginError(500, null), {
+    type: 'service-unavailable',
+    message: 'The service is temporarily unavailable. Please try again shortly.'
+  });
+  assert.deepEqual(classifyLoginError(0, null), {
+    type: 'service-unavailable',
+    message: 'The service is temporarily unavailable. Please try again shortly.'
+  });
 });

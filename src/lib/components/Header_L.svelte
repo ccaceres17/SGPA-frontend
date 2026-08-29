@@ -1,3 +1,9 @@
+<script>
+  import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+  import LanguageToggle from '$lib/components/LanguageToggle.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
+</script>
+
 <svelte:head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 </svelte:head>
@@ -6,27 +12,21 @@
   <div class="top-bar"></div>
 
   <div class="header-container">
-    <div class="brand">
-      <div class="logo-slot" aria-label="Logo universitario">
-        <img src="/images/logo-cul.webp" alt="CUL university logo" width="400" height="169" />
+    <a href="/" class="brand" aria-label="SGPA — {t('nav.home')}">
+      <div class="logo-slot" aria-hidden="true">
+        <img src="/images/logo-cul.webp" alt="" width="400" height="169" />
       </div>
 
       <div class="brand-text">
-        <h1 class="brand-title" aria-label="SGPA">
-          <span>S</span>
-          <span class="dot"></span>
-          <span>G</span>
-          <span class="dot"></span>
-          <span>P</span>
-          <span class="dot"></span>
-          <span>A</span>
-        </h1>
-        <p>Academic Project Management System</p>
+        <span class="brand-title">SGPA</span>
+        <p>{t('header.tagline')}</p>
       </div>
-    </div>
+    </a>
 
-    <nav class="main-nav" aria-label="Main navigation">
-      <a href="/" class="home-btn">Home</a>
+    <nav class="main-nav" aria-label={t('nav.menuLabel')}>
+      <LanguageToggle />
+      <ThemeToggle />
+      <a href="/" class="home-btn">{t('nav.home')}</a>
     </nav>
   </div>
 </header>
@@ -34,7 +34,7 @@
 <style>
   .top-bar {
     height: 7px;
-    background: linear-gradient(90deg, var(--sgpa-blue), var(--sgpa-yellow), var(--sgpa-orange));
+    background: var(--sgpa-blue-dark);
   }
 
   .site-header {
@@ -59,14 +59,18 @@
   .brand {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
+    text-decoration: none;
+    min-width: 0;
   }
 
   .logo-slot {
-    width: 70px;
-    height: 70px;
-    border-radius: 18px;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
     overflow: hidden;
+    /* Intentionally always white: the logo art is designed for a light
+       tile and would lose contrast on a dark surface in dark mode. */
     background: #ffffff;
     flex-shrink: 0;
     display: grid;
@@ -82,29 +86,20 @@
   }
 
   .brand-title {
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 9px;
+    display: block;
     color: var(--sgpa-blue);
-    font-size: 1.8rem;
+    font-size: 1.35rem;
     line-height: 1;
     font-weight: 950;
-    letter-spacing: 0.02em;
-  }
-
-  .brand-title .dot {
-    width: 7px;
-    height: 7px;
-    background: var(--sgpa-yellow);
-    border-radius: 50%;
+    letter-spacing: 0.01em;
   }
 
   .brand-text p {
-    margin: 8px 0 0;
+    margin: 6px 0 0;
     color: var(--sgpa-text-soft);
-    font-size: 0.92rem;
+    font-size: 0.82rem;
     font-weight: 650;
+    white-space: nowrap;
   }
 
   .main-nav {
@@ -114,50 +109,19 @@
     flex-wrap: wrap;
   }
 
-  .main-nav a {
-    text-decoration: none;
-    color: var(--sgpa-text-soft);
-    font-size: 0.95rem;
-    font-weight: 800;
-    position: relative;
-    transition: color 0.22s ease, transform 0.22s ease;
-    padding: 8px 0;
-  }
-
-  .main-nav a:hover,
-  .main-nav a.active {
-    color: var(--sgpa-blue);
-  }
-
-  .main-nav a.active::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 100%;
-    height: 3px;
-    background: var(--sgpa-yellow);
-    border-radius: 999px;
-  }
-
-  .login-btn,
-  .home-btn,
-  .nav-btn {
+  .home-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-height: 42px;
     padding: 10px 18px !important;
-    background: linear-gradient(135deg, var(--sgpa-blue), var(--sgpa-blue-mid));
+    background: var(--sgpa-accent-start);
     color: #ffffff !important;
     border-radius: 999px;
     font-weight: 900 !important;
-    box-shadow: 0 10px 22px rgba(11, 45, 105, 0.16);
   }
 
-  .login-btn:hover,
-  .home-btn:hover,
-  .nav-btn:hover {
+  .home-btn:hover {
     transform: translateY(-1px);
   }
 
@@ -166,9 +130,11 @@
       flex-direction: column;
       align-items: flex-start;
     }
+  }
 
-    .brand-title {
-      font-size: 1.5rem;
+  @media (max-width: 480px) {
+    .brand-text p {
+      display: none;
     }
   }
 </style>

@@ -4,13 +4,15 @@ import {
   enrollStudentInProject,
   ROLE_IDS
 } from '$lib/server/project-helpers.js';
+import { applyStatusUpdate } from '$lib/server/status-update.js';
+import { getLocaleFromCookies } from '$lib/server/locale.js';
 
 function getCurrentStudentId(locals) {
   return Number(locals?.session?.user?.id_user || 0);
 }
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ fetch, params, url, locals }) {
+export async function load({ fetch, params, url, locals, cookies }) {
   const projectId = Number(params.id);
   const source = url.searchParams.get('source') || 'available';
   const currentStudentId = getCurrentStudentId(locals);
@@ -34,7 +36,8 @@ export async function load({ fetch, params, url, locals }) {
   }
 
   try {
-    const details = await getProjectDetails(fetch, 'students', projectId);
+    const locale = getLocaleFromCookies(cookies);
+    const details = await getProjectDetails(fetch, 'students', projectId, locale);
 
     const isEnrolled = details.relations.some(
       (relation) =>
@@ -78,19 +81,23 @@ export const actions = {
       });
     }
 
-    try {
-      const result = await enrollStudentInProject(fetch, projectId, currentStudentId);
+    let enrollResult;
 
-      return {
-        success: true,
-        message: result?.alreadyExists
-          ? 'You were already enrolled in this project.'
-          : 'Enrollment completed successfully.'
-      };
-    } catch (error) {
-      return fail(500, {
-        error: error.message || 'Could not enroll in this project.'
+    const result = await applyStatusUpdate(async () => {
+      enrollResult = await enrollStudentInProject(fetch, projectId, currentStudentId);
+    });
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, {
+        error: result.message
       });
     }
+
+    return {
+      success: true,
+      message: enrollResult?.alreadyExists
+        ? 'You were already enrolled in this project.'
+        : 'Enrollment completed successfully.'
+    };
   }
 };

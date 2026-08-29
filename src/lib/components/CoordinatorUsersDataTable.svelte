@@ -1,34 +1,28 @@
 <script>
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+  import { createConfirmFlow } from '$lib/client/confirmFlow.svelte.js';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   export let users = [];
   export let form = null;
-  export let title = 'Users';
-  export let subtitle = 'Manage registered users.';
-  export let searchPlaceholder = 'Search user by name, email, phone, or status...';
-  export let emptyMessage = 'No users found.';
+  export let title = '';
+  export let subtitle = '';
+  export let searchPlaceholder = '';
+  export let emptyMessage = '';
   export let userType = 'users';
 
   let search = '';
   let page = 1;
   const pageSize = 10;
 
-  let confirmOpen = false;
-  let pendingForm = null;
-  let allowSubmit = false;
-
-  let modalTitle = 'Confirm action';
-  let modalMessage = 'Are you sure you want to continue?';
-  let modalDetails = '';
-  let modalConfirmText = 'Confirm';
-  let modalVariant = 'warning';
+  const confirm = createConfirmFlow();
 
   function boolValue(value) {
     return value === true || String(value).trim().toLowerCase() === 'true';
   }
 
   function fullName(user) {
-    return `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Unnamed user';
+    return `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || t('ui.unnamedUser');
   }
 
   function initials(user) {
@@ -39,55 +33,22 @@
   }
 
   function statusText(user) {
-    return user.is_active ? 'Active' : 'Inactive';
+    return user.is_active ? t('ui.activeStatus') : t('ui.inactive');
   }
 
   function openConfirmModal(event, user) {
-    if (allowSubmit) {
-      allowSubmit = false;
-      return;
-    }
-
-    event.preventDefault();
-
     const nextStatus = !user.is_active;
     const singularType = userType.endsWith('s') ? userType.slice(0, -1) : userType;
 
-    pendingForm = event.currentTarget;
-
-    modalTitle = nextStatus
-      ? `Enable ${singularType}?`
-      : `Disable ${singularType}?`;
-
-    modalMessage = nextStatus
-      ? 'This user will regain visual access in the SGPA interface.'
-      : 'This user will be visually marked as inactive in the SGPA interface.';
-
-    modalDetails = `${fullName(user)} | ${user.email || 'No email registered'}`;
-    modalConfirmText = nextStatus ? 'Enable user' : 'Disable user';
-    modalVariant = nextStatus ? 'success' : 'danger';
-
-    confirmOpen = true;
-  }
-
-  function closeConfirm() {
-    confirmOpen = false;
-    pendingForm = null;
-  }
-
-  function confirmAction() {
-    if (!pendingForm) {
-      closeConfirm();
-      return;
-    }
-
-    const formToSubmit = pendingForm;
-
-    confirmOpen = false;
-    pendingForm = null;
-    allowSubmit = true;
-
-    formToSubmit.requestSubmit();
+    confirm.request(event, {
+      title: nextStatus
+        ? t('ui.enableQuestion', { type: singularType })
+        : t('ui.disableQuestion', { type: singularType }),
+      message: nextStatus ? t('ui.enableUserMessage') : t('ui.disableUserMessage'),
+      details: `${fullName(user)} | ${user.email || t('ui.noEmailRegistered')}`,
+      confirmText: nextStatus ? t('ui.enableUser') : t('ui.disableUser'),
+      variant: nextStatus ? 'success' : 'danger'
+    });
   }
 
   function resetPage() {
@@ -140,15 +101,15 @@
 <section class="datatable-shell">
   <header class="section-header">
     <div>
-      <span class="eyebrow">Coordinator module</span>
-      <h1>{title}</h1>
+      <span class="eyebrow">{t('sidebar.coordinatorModuleLabel')}</span>
+      <h1>{title || t('ui.users')}</h1>
       <p>{subtitle}</p>
     </div>
 
     <div class="stats">
-      <span>{displayedUsers.length} total</span>
-      <span>{activeCount} active</span>
-      <span>{inactiveCount} inactive</span>
+      <span>{displayedUsers.length} {t('ui.total')}</span>
+      <span>{activeCount} {t('ui.active')}</span>
+      <span>{inactiveCount} {t('ui.inactive').toLowerCase()}</span>
     </div>
   </header>
 
@@ -160,16 +121,17 @@
           bind:value={search}
           on:input={resetPage}
           type="search"
-          placeholder={searchPlaceholder}
-          aria-label="Search users"
+          placeholder={searchPlaceholder || t('ui.search')}
+          aria-label={t('ui.search')}
         />
       </div>
 
       <span class="records-pill">
-        Showing {filteredUsers.length === 0 ? 0 : start + 1}
-        -
-        {Math.min(end, filteredUsers.length)}
-        of {filteredUsers.length}
+        {t('ui.showingOfRange', {
+          start: filteredUsers.length === 0 ? 0 : start + 1,
+          end: Math.min(end, filteredUsers.length),
+          total: filteredUsers.length
+        })}
       </span>
     </div>
 
@@ -178,11 +140,11 @@
         <table>
           <thead>
             <tr>
-              <th>User</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Status</th>
-              <th class="action-heading">Action</th>
+              <th>{t('ui.name')}</th>
+              <th>{t('ui.email')}</th>
+              <th>{t('ui.phone')}</th>
+              <th>{t('ui.status')}</th>
+              <th class="action-heading">{t('ui.actions')}</th>
             </tr>
           </thead>
 
@@ -202,9 +164,9 @@
                   </div>
                 </td>
 
-                <td>{user.email || 'No email registered'}</td>
+                <td>{user.email || t('ui.noEmailRegistered')}</td>
 
-                <td>{user.phone_number || user.phone || 'Not registered'}</td>
+                <td>{user.phone_number || user.phone || t('ui.notRegistered')}</td>
 
                 <td>
                   <span class="status-badge" class:inactive={!user.is_active}>
@@ -222,7 +184,7 @@
                       class:enable-btn={!user.is_active}
                       class:disable-btn={user.is_active}
                     >
-                      {user.is_active ? 'Disable' : 'Enable'}
+                      {user.is_active ? t('ui.disable') : t('ui.enable')}
                     </button>
                   </form>
                 </td>
@@ -234,39 +196,40 @@
 
       <footer class="pagination">
         <span>
-          Page {page} of {totalPages}
+          {t('ui.pageOf', { current: page, total: totalPages })}
         </span>
 
         <div class="pagination-actions">
           <button type="button" on:click={() => (page = Math.max(1, page - 1))} disabled={page === 1}>
-            Previous
+            {t('ui.previous')}
           </button>
 
           <button type="button" on:click={() => (page = Math.min(totalPages, page + 1))} disabled={page === totalPages}>
-            Next
+            {t('ui.next')}
           </button>
         </div>
       </footer>
     {:else}
       <section class="empty-state">
         <div>📭</div>
-        <h2>{emptyMessage}</h2>
-        <p>No records match your current search.</p>
+        <h2>{emptyMessage || t('ui.noData')}</h2>
+        <p>{t('ui.noRecordsMatch')}</p>
       </section>
     {/if}
   </section>
 </section>
 
 <ConfirmModal
-  open={confirmOpen}
-  title={modalTitle}
-  message={modalMessage}
-  details={modalDetails}
-  confirmText={modalConfirmText}
-  cancelText="Cancel"
-  variant={modalVariant}
-  onCancel={closeConfirm}
-  onConfirm={confirmAction}
+  open={confirm.state.open}
+  title={confirm.state.title}
+  message={confirm.state.message}
+  details={confirm.state.details}
+  confirmText={confirm.state.confirmText}
+  cancelText={t('ui.cancel')}
+  variant={confirm.state.variant}
+  loading={confirm.state.loading}
+  onCancel={confirm.cancel}
+  onConfirm={confirm.confirm}
 />
 
 <style>
@@ -283,9 +246,7 @@
     margin-bottom: 1.2rem;
     padding: 1.5rem;
     border-radius: 28px;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 18rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -330,7 +291,7 @@
   .stats span {
     padding: 0.48rem 0.8rem;
     border-radius: 999px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     border: 1px solid var(--sgpa-border);
     font-size: 0.82rem;
@@ -341,7 +302,7 @@
   .table-card {
     overflow: hidden;
     border-radius: 28px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -353,9 +314,7 @@
     gap: 1rem;
     padding: 1rem;
     border-bottom: 1px solid var(--sgpa-border);
-    background:
-      radial-gradient(circle at top left, rgba(11, 45, 105, 0.04), transparent 18rem),
-      #ffffff;
+    background: var(--sgpa-surface);
   }
 
   .search-box {
@@ -512,11 +471,11 @@
   }
 
   .disable-btn {
-    background: linear-gradient(135deg, #dc2626, #991b1b);
+    background: var(--sgpa-danger, #dc2626);
   }
 
   .enable-btn {
-    background: linear-gradient(135deg, #15803d, #166534);
+    background: var(--sgpa-success, #15803d);
   }
 
   .pagination {
@@ -525,7 +484,7 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    background: #ffffff;
+    background: var(--sgpa-surface);
   }
 
   .pagination span {
@@ -543,7 +502,7 @@
     padding: 0.62rem 0.95rem;
     border-radius: 999px;
     border: 1px solid var(--sgpa-border);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     font-weight: 950;
     cursor: pointer;

@@ -1,57 +1,40 @@
+<script>
+  import { t } from '$lib/stores/locale.svelte.js';
+</script>
+
 <footer class="site-footer">
   <div class="footer-divider"></div>
 
   <div class="footer-grid">
     <div class="footer-column footer-brand">
       <h4>SGPA</h4>
-      <p>
-        Academic Project Management System focused on tracking, organizing, and
-        consulting projects within the institutional environment.
-      </p>
+      <p>{t('footer.brandDescription')}</p>
     </div>
 
     <div class="footer-column">
-      <h4>CONTACT</h4>
+      <h4>{t('footer.contactHeading')}</h4>
       <p>58th Street #55-24A Barranquilla, Colombia</p>
       <p>Email: promocion@ul.edu.co</p>
       <p>Phone: (+57) 314 8962734</p>
     </div>
 
     <div class="footer-column">
-      <h4>USEFUL LINKS</h4>
-      <a href="/">Home</a>
-      <a href="/login">System login</a>
-      <span class="footer-link-disabled" aria-disabled="true">Data processing policy</span>
-      <span class="footer-link-disabled" aria-disabled="true">User support</span>
+      <h4>{t('footer.usefulLinksHeading')}</h4>
+      <a href="/">{t('footer.homeLink')}</a>
+      <a href="/login">{t('footer.loginLink')}</a>
     </div>
 
     <div class="footer-column">
-      <h4>MODULES</h4>
-      <a href="/coordinator">Coordinator</a>
-      <a href="/teacher">Teacher</a>
-      <a href="/students">Student</a>
+      <h4>{t('footer.modulesHeading')}</h4>
+      <a href="/coordinator">{t('footer.coordinator')}</a>
+      <a href="/teacher">{t('footer.teacher')}</a>
+      <a href="/students">{t('footer.student')}</a>
     </div>
   </div>
 
   <div class="footer-divider bottom"></div>
 
   <div class="footer-social" aria-label="Social media and contact links">
-    <span aria-label="Facebook" aria-disabled="true" class="social-link facebook" title="Facebook">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M14.18 8.35H17V4.22C16.52 4.15 14.86 4 13.3 4C10.04 4 7.8 5.93 7.8 9.45V12H4.5V16.65H7.8V24H12.55V16.65H16.05L16.65 12H12.55V9.9C12.55 8.82 12.84 8.35 14.18 8.35Z"
-        />
-      </svg>
-    </span>
-
-    <span aria-label="Instagram" aria-disabled="true" class="social-link instagram" title="Instagram">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="4" y="4" width="16" height="16" rx="5" />
-        <circle cx="12" cy="12" r="3.55" />
-        <circle cx="17" cy="7" r="1.1" />
-      </svg>
-    </span>
-
     <a
       href="https://wa.me/573148962734"
       aria-label="WhatsApp"
@@ -84,7 +67,11 @@
 
 <style>
   .site-footer {
-    background: linear-gradient(135deg, var(--sgpa-blue-dark), var(--sgpa-blue));
+    /* Intentionally theme-independent: the footer stays on the brand's dark
+       navy in both light and dark mode, so it uses a fixed value rather than
+       --sgpa-blue/--sgpa-blue-dark (which flip to light shades in dark mode
+       for text-legibility elsewhere on the page). */
+    background: #202f56;
     color: #ffffff;
     padding: 56px 24px 34px;
     border-top: 5px solid var(--sgpa-yellow);
@@ -94,12 +81,7 @@
     max-width: 1280px;
     margin: 0 auto 34px;
     height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(242, 183, 5, 0.55),
-      transparent
-    );
+    background: rgba(247, 184, 6, 0.35);
   }
 
   .footer-divider.bottom {
@@ -124,8 +106,7 @@
   }
 
   .footer-column p,
-  .footer-column a,
-  .footer-column .footer-link-disabled {
+  .footer-column a {
     display: block;
     margin: 0 0 10px;
     color: rgba(255, 255, 255, 0.78);
@@ -136,10 +117,6 @@
 
   .footer-column a:hover {
     color: var(--sgpa-yellow);
-  }
-
-  .footer-link-disabled {
-    cursor: default;
   }
 
   .footer-brand p {
@@ -162,20 +139,14 @@
     display: grid;
     place-items: center;
     text-decoration: none;
-    background:
-      radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 60%),
-      rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.09);
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 10px 24px rgba(0, 0, 0, 0.12);
     transition:
       transform 0.22s ease,
       background 0.22s ease,
       border-color 0.22s ease,
-      color 0.22s ease,
-      box-shadow 0.22s ease;
+      color 0.22s ease;
   }
 
   .social-link svg {
@@ -188,29 +159,10 @@
     fill: currentColor;
   }
 
-  .instagram svg rect,
-  .instagram svg circle {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-  }
-
   .social-link:hover {
     transform: translateY(-3px);
     color: #ffffff;
     border-color: rgba(255, 255, 255, 0.3);
-  }
-
-  .facebook:hover {
-    background: #1877f2;
-    box-shadow: 0 14px 28px rgba(24, 119, 242, 0.28);
-  }
-
-  .instagram:hover {
-    background:
-      radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 14%, transparent 26%),
-      linear-gradient(135deg, #405de6, #833ab4, #c13584, #e1306c, #fd1d1d, #f77737);
-    box-shadow: 0 14px 28px rgba(225, 48, 108, 0.28);
   }
 
   .whatsapp:hover {
@@ -219,7 +171,7 @@
   }
 
   .phone:hover {
-    background: linear-gradient(135deg, var(--sgpa-yellow), var(--sgpa-orange));
+    background: var(--sgpa-yellow);
     color: var(--sgpa-blue-dark);
     box-shadow: 0 14px 28px rgba(242, 183, 5, 0.28);
   }

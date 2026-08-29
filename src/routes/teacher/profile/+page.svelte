@@ -3,6 +3,7 @@
   import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/TeacherSideBar.svelte';
   import Profile from '$lib/components/Profile.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   export let data;
 
@@ -17,12 +18,12 @@
   <div class="content-wrapper">
     <header class="main-header">
       <div>
-        <span class="eyebrow">Teacher module</span>
-        <h1>Teacher profile</h1>
-        <p>Check your personal information, assigned role, and account status within the system.</p>
+        <span class="eyebrow">{t('sidebar.teacherModuleLabel')}</span>
+        <h1>{t('pages.teacherProfile.heading')}</h1>
+        <p>{t('pages.teacherProfile.description')}</p>
       </div>
 
-      <span class="header-badge">Profile</span>
+      <span class="header-badge">{t('sidebar.profile')}</span>
     </header>
 
     {#if error}
@@ -39,9 +40,6 @@
   main {
     min-height: 80vh;
     padding: 2rem 1rem 3rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.12), transparent 22rem),
-      linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 100%);
   }
 
   .content-wrapper {
@@ -57,9 +55,7 @@
     margin-bottom: 1.6rem;
     padding: 1.6rem;
     border-radius: 28px;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 18rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -98,7 +94,7 @@
     flex: 0 0 auto;
     padding: 0.55rem 1rem;
     border-radius: 999px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     border: 1px solid var(--sgpa-border);
     font-weight: 950;

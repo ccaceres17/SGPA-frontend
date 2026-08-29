@@ -3,6 +3,7 @@
   import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/CoordinatorSideBar.svelte';
   import CoordinatorUsersDataTable from '$lib/components/CoordinatorUsersDataTable.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   export let data;
   export let form;
@@ -19,17 +20,17 @@
   <div class="content-wrapper">
     <section class="report-action-card">
       <div>
-        <span class="eyebrow">Coordinator module</span>
-        <h2>Student report</h2>
-        <p>Generate a PDF report with students, account status, semester, and enrolled projects.</p>
+        <span class="eyebrow">{t('sidebar.coordinatorModuleLabel')}</span>
+        <h2>{t('pages.coordinatorStudents.heading')}</h2>
+        <p>{t('pages.coordinatorStudents.description')}</p>
       </div>
 
       <div class="header-actions">
         <a class="report-btn" href="/coordinator/students/report" target="_blank" rel="noopener noreferrer">
-          PDF report
+          {t('pages.coordinatorStudents.pdfReport')}
         </a>
 
-        <span class="header-label">Students</span>
+        <span class="header-label">{t('sidebar.students')}</span>
       </div>
     </section>
 
@@ -44,10 +45,10 @@
     <CoordinatorUsersDataTable
       {users}
       {form}
-      title="Students"
-      subtitle="View, search, enable, and disable student accounts registered in SGPA."
-      searchPlaceholder="Search student by name, email, phone, ID, or status..."
-      emptyMessage="No students to display."
+      title={t('sidebar.students')}
+      subtitle={t('pages.coordinatorStudents.tableSubtitle')}
+      searchPlaceholder={t('pages.coordinatorStudents.searchPlaceholder')}
+      emptyMessage={t('pages.coordinatorStudents.emptyMessage')}
       userType="students"
     />
   </div>
@@ -59,9 +60,6 @@
   main {
     min-height: 80vh;
     padding: 2rem 1rem 3rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.12), transparent 22rem),
-      linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 100%);
   }
 
   .content-wrapper {
@@ -78,9 +76,7 @@
     margin-bottom: 1.2rem;
     padding: 1.5rem;
     border-radius: 28px;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 18rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -129,8 +125,8 @@
     min-height: 44px;
     padding: 0.72rem 1.08rem;
     border-radius: 999px;
-    background: linear-gradient(135deg, var(--sgpa-blue), var(--sgpa-blue-mid));
-    color: #ffffff;
+    background: var(--sgpa-accent-start);
+    color: var(--sgpa-on-accent);
     border: 1px solid rgba(11, 45, 105, 0.18);
     font-weight: 950;
     box-shadow: 0 12px 24px rgba(11, 45, 105, 0.16);
@@ -154,7 +150,7 @@
 
   .report-btn:hover {
     transform: translateY(-1px);
-    background: linear-gradient(135deg, var(--sgpa-blue-dark), var(--sgpa-blue));
+    background: var(--sgpa-accent-hover);
     box-shadow: 0 16px 30px rgba(11, 45, 105, 0.22);
     border-color: rgba(11, 45, 105, 0.3);
   }

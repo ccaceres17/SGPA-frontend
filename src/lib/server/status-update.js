@@ -27,7 +27,7 @@ export function classifyMutationError(status) {
   if (code === 422) {
     return {
       type: 'validation',
-      message: 'The status change was rejected because the data was invalid.'
+      message: 'The request was rejected because the data was invalid.'
     };
   }
 

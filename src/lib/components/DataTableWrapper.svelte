@@ -1,15 +1,16 @@
 <script>
   import { onMount, tick } from 'svelte';
   import 'simple-datatables/dist/style.css';
+  import { t, localeState } from '$lib/stores/locale.svelte.js';
 
   export let columns = [];
   export let rows = [];
-  export let emptyMessage = 'No data to display.';
+  export let emptyMessage = '';
   export let tableId = 'sgpa-table';
   export let searchable = true;
   export let perPage = 10;
   export let perPageSelect = [10, 20, 30, 50];
-  export let searchPlaceholder = 'Search...';
+  export let searchPlaceholder = '';
 
   let tableElement;
   let datatable;
@@ -34,10 +35,10 @@
         perPageSelect,
         fixedHeight: false,
         labels: {
-          placeholder: searchPlaceholder,
-          perPage: '{select} records per page',
-          noRows: 'No records found',
-          info: 'Showing {start} to {end} of {rows} records'
+          placeholder: searchPlaceholder || t('ui.search'),
+          perPage: t('ui.recordsPerPage'),
+          noRows: t('ui.noRecordsFound'),
+          info: t('ui.showingRecords')
         }
       });
     }
@@ -54,7 +55,11 @@
     };
   });
 
-  $: if (mounted) {
+  // Re-initializes on row changes and also on locale changes, so the
+  // underlying (non-Svelte) DataTable's own chrome — search placeholder,
+  // pagination labels — picks up translated text when the user toggles
+  // language, instead of staying frozen in whatever language it first built.
+  $: if (mounted && localeState.current) {
     initTable();
   }
 </script>
@@ -87,13 +92,13 @@
       </tbody>
     </table>
   {:else}
-    <div class="empty-state">{emptyMessage}</div>
+    <div class="empty-state">{emptyMessage || t('ui.noData')}</div>
   {/if}
 </div>
 
 <style>
   .datatable-card {
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border-radius: 24px;
     box-shadow: var(--sgpa-shadow-md);
     overflow: hidden;
@@ -137,7 +142,7 @@
     border-radius: 999px;
     outline: none;
     font-size: 0.98rem;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-text);
   }
 
@@ -151,7 +156,7 @@
     border-radius: 12px;
     padding: 0.65rem 0.8rem;
     font-size: 0.95rem;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-text);
   }
 
@@ -189,7 +194,7 @@
     border: 1px solid var(--sgpa-border);
     text-decoration: none;
     color: var(--sgpa-blue);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     font-weight: 850;
   }
 

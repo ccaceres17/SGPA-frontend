@@ -2,60 +2,7 @@
   import { base } from '$app/paths';
   import Header from '$lib/components/Header.svelte';
   import Footer from '$lib/components/Footer.svelte';
-
-  const quickAccess = [
-    {
-      title: 'Project management',
-      description:
-        'View, register, and organize academic projects within the SGPA system.',
-      action: 'Learn more',
-      image: '/images/gestion-proyectos.webp',
-      width: 800,
-      height: 427
-    },
-    {
-      title: 'Calls',
-      description:
-        'Access active calls, enrollment processes, and academic tracking.',
-      action: 'Explore',
-      image: '/images/convocatorias.webp',
-      width: 800,
-      height: 800
-    },
-    {
-      title: 'Academic tracking',
-      description:
-        'View the overall status of processes, deliverables, progress, and responsible users.',
-      action: 'View',
-      image: '/images/seguimiento.webp',
-      width: 800,
-      height: 534
-    }
-  ];
-
-  const teamCards = [
-    {
-      role: 'Coordinator',
-      text: 'Main system administrator responsible for overall supervision and process validation.',
-      image: '/images/coordinador.png',
-      width: 302,
-      height: 338
-    },
-    {
-      role: 'Academic team',
-      text: 'Support team responsible for tracking, reviewing, and supporting project management.',
-      image: '/images/equipo-academico.png',
-      width: 400,
-      height: 267
-    },
-    {
-      role: 'Teachers',
-      text: 'They participate in guiding, evaluating, and supporting academic initiatives.',
-      image: '/images/docentes.png',
-      width: 400,
-      height: 271
-    }
-  ];
+  import { t } from '$lib/stores/locale.svelte.js';
 </script>
 
 <svelte:head>
@@ -71,140 +18,55 @@
 
   <main id="inicio">
     <section class="hero">
-      <div class="hero-overlay">
-        <div class="hero-content">
-          <span class="hero-badge">Institutional platform</span>
+      <div class="hero-inner">
+        <span class="eyebrow">{t('home.hero.eyebrow')}</span>
+        <h2>{t('home.hero.title')}</h2>
+        <p>{t('home.hero.description')}</p>
 
-          <h2>Academic Project Management System</h2>
-
-          <p>
-            SGPA is a platform focused on organizing, tracking, and managing
-            academic projects within the university environment. Its purpose is to simplify
-            the control of processes, responsible users, progress, and relevant information
-            in one place.
-          </p>
-
-          <div class="hero-actions">
-            <a href="{base}/login" class="primary-btn">Enter the system</a>
-            <a href="#funcionamiento" class="secondary-btn">Learn more</a>
-          </div>
-        </div>
-
-        <div class="hero-image-slot">
-          <img
-            src="/images/login-banner.webp"
-            alt="Main SGPA system banner"
-            width="1200"
-            height="800"
-            fetchpriority="high"
-          />
+        <div class="hero-actions">
+          <a href="{base}/login" class="primary-btn">{t('home.hero.primaryCta')}</a>
+          <a href="#funcionamiento" class="secondary-btn">{t('home.hero.secondaryCta')}</a>
         </div>
       </div>
     </section>
 
-    <section id="funcionamiento" class="info-section">
+    <section id="funcionamiento" class="features-section">
       <div class="section-header">
-        <span class="section-eyebrow">How it works</span>
-        <h3>How does SGPA work?</h3>
-        <p>
-          The system is designed to centralize academic management related to
-          projects, calls, tracking, and administrative control.
-        </p>
+        <span class="section-eyebrow">{t('home.features.eyebrow')}</span>
+        <h3>{t('home.features.heading')}</h3>
+        <p>{t('home.features.description')}</p>
       </div>
 
-      <div class="info-grid">
-        <article class="info-card">
-          <span class="card-number">01</span>
-          <h4>Central administration</h4>
-          <p>
-            The coordinator acts as the main system administrator, supervising processes,
-            verifying information, and managing the overall flow of academic projects.
-          </p>
-        </article>
-
-        <article class="info-card">
-          <span class="card-number">02</span>
-          <h4>Control and tracking</h4>
-          <p>
-            SGPA enables traceability of activities, statuses, deliverables, and project progress,
-            reducing disorder and improving institutional consultation.
-          </p>
-        </article>
-
-        <article class="info-card">
-          <span class="card-number">03</span>
-          <h4>Organized access</h4>
-          <p>
-            The platform aims to provide clear navigation for academic users,
-            administrative users, and those responsible for project-related processes.
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <section class="cards-section">
-      <div class="section-header">
-        <span class="section-eyebrow">Modules</span>
-        <h3>Main system areas</h3>
-        <p>
-          SGPA organizes its main functions into clear modules designed to simplify
-          consultation and management of academic information.
-        </p>
-      </div>
-
-      <div class="cards-grid">
-        {#each quickAccess as item}
+      <div class="features-grid">
+        {#each t('home.features.items') as item}
           <article class="feature-card">
-            <div class="feature-image-slot">
-              <img
-                src={item.image}
-                alt={item.title}
-                width={item.width}
-                height={item.height}
-                loading="lazy"
-              />
-            </div>
-
-            <div class="feature-content">
-              <h4>{item.title}</h4>
-              <p>{item.description}</p>
-              <a href="/login">{item.action}</a>
-            </div>
+            <h4>{item.title}</h4>
+            <p>{item.text}</p>
           </article>
         {/each}
       </div>
     </section>
 
-    <section id="equipo" class="team-section">
+    <section id="equipo" class="roles-section">
       <div class="section-header">
-        <span class="section-eyebrow">Team</span>
-        <h3>Coordinator and main team</h3>
-        <p>
-          This section can be used to introduce the system coordinator and the core team
-          responsible for project administration and support.
-        </p>
+        <span class="section-eyebrow">{t('home.roles.eyebrow')}</span>
+        <h3>{t('home.roles.heading')}</h3>
+        <p>{t('home.roles.description')}</p>
       </div>
 
-      <div class="team-grid">
-        {#each teamCards as person}
-          <article class="team-card">
-            <div class="team-image-slot">
-              <img
-                src={person.image}
-                alt={person.role}
-                width={person.width}
-                height={person.height}
-                loading="lazy"
-              />
-            </div>
-
-            <div class="team-content">
-              <h4>{person.role}</h4>
-              <p>{person.text}</p>
-            </div>
+      <div class="roles-grid">
+        {#each t('home.roles.items') as item}
+          <article class="role-card">
+            <h4>{item.title}</h4>
+            <p>{item.text}</p>
           </article>
         {/each}
       </div>
+    </section>
+
+    <section class="final-cta">
+      <h3>{t('home.finalCta.heading')}</h3>
+      <a href="{base}/login" class="primary-btn">{t('home.finalCta.button')}</a>
     </section>
   </main>
 
@@ -218,28 +80,18 @@
   }
 
   .hero {
-    position: relative;
-    padding: 58px 24px 52px;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 24rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    padding: 56px 24px;
+    background: var(--sgpa-surface);
     border-bottom: 1px solid var(--sgpa-border);
   }
 
-  .hero-overlay {
-    max-width: 1280px;
+  .hero-inner {
+    max-width: 760px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: 38px;
-    align-items: center;
+    text-align: center;
   }
 
-  .hero-content {
-    padding: 10px 0;
-  }
-
-  .hero-badge,
+  .eyebrow,
   .section-eyebrow {
     display: inline-flex;
     width: fit-content;
@@ -250,33 +102,39 @@
     padding: 8px 14px;
     border-radius: 999px;
     margin-bottom: 18px;
-    border: 1px solid rgba(242, 183, 5, 0.32);
+    border: 1px solid rgba(247, 184, 6, 0.32);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
 
-  .hero-content h2 {
-    margin: 0 0 16px;
-    font-size: clamp(2.25rem, 4vw, 4rem);
-    line-height: 1.05;
-    color: var(--sgpa-blue-dark);
-    letter-spacing: -0.045em;
-    font-weight: 950;
+  .hero-inner .eyebrow {
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  .hero-content p {
-    margin: 0;
-    font-size: 1.08rem;
-    line-height: 1.8;
+  .hero-inner h2 {
+    margin: 0 0 16px;
+    font-size: clamp(1.9rem, 3.4vw, 2.75rem);
+    line-height: 1.1;
+    color: var(--sgpa-blue-dark);
+    letter-spacing: -0.03em;
+    font-weight: 900;
+  }
+
+  .hero-inner p {
+    margin: 0 auto;
+    font-size: 1.05rem;
+    line-height: 1.7;
     color: var(--sgpa-text-soft);
-    max-width: 720px;
+    max-width: 620px;
   }
 
   .hero-actions {
     display: flex;
+    justify-content: center;
     gap: 14px;
     flex-wrap: wrap;
-    margin-top: 28px;
+    margin-top: 26px;
   }
 
   .primary-btn,
@@ -291,178 +149,103 @@
     font-weight: 900;
   }
 
-  .hero-image-slot {
-    min-height: 420px;
-    border-radius: 30px;
-    overflow: hidden;
-    background: #ffffff;
-    border: 1px solid var(--sgpa-border);
-    box-shadow: var(--sgpa-shadow-lg);
-  }
-
-  .hero-image-slot img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .info-section,
-  .cards-section,
-  .team-section {
-    max-width: 1280px;
+  .features-section,
+  .roles-section {
+    max-width: 1180px;
     margin: 0 auto;
-    padding: 78px 24px;
+    padding: 64px 24px;
   }
 
   .section-header {
     text-align: center;
-    margin-bottom: 38px;
+    margin-bottom: 34px;
   }
 
   .section-header h3 {
-    margin: 0 0 14px;
+    margin: 0 0 12px;
     color: var(--sgpa-blue-dark);
-    font-size: clamp(1.9rem, 3vw, 3rem);
-    font-weight: 950;
+    font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+    font-weight: 900;
   }
 
   .section-header p {
-    max-width: 860px;
+    max-width: 720px;
     margin: 0 auto;
     color: var(--sgpa-text-soft);
-    font-size: 1.03rem;
-    line-height: 1.8;
+    font-size: 1rem;
+    line-height: 1.7;
   }
 
-  .info-grid,
-  .cards-grid,
-  .team-grid {
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .roles-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 26px;
+    gap: 20px;
   }
 
-  .info-card,
   .feature-card,
-  .team-card {
-    background: #ffffff;
-    border-radius: 24px;
-    overflow: hidden;
+  .role-card {
+    background: var(--sgpa-surface);
+    border-radius: 18px;
+    padding: 24px;
     border: 1px solid var(--sgpa-border);
-    box-shadow: var(--sgpa-shadow-sm);
-    transition:
-      transform 0.25s ease,
-      box-shadow 0.25s ease,
-      border-color 0.25s ease;
   }
 
-  .info-card {
-    padding: 28px;
-    border-top: 5px solid var(--sgpa-blue);
-  }
-
-  .card-number {
-    display: inline-flex;
-    width: fit-content;
-    margin-bottom: 1rem;
-    padding: 0.35rem 0.7rem;
-    border-radius: 999px;
-    background: var(--sgpa-blue-soft);
+  .feature-card h4,
+  .role-card h4 {
+    margin: 0 0 10px;
     color: var(--sgpa-blue);
-    font-weight: 950;
-    font-size: 0.78rem;
-  }
-
-  .info-card:hover,
-  .feature-card:hover,
-  .team-card:hover {
-    transform: translateY(-6px);
-    box-shadow: var(--sgpa-shadow-md);
-    border-color: rgba(11, 45, 105, 0.18);
-  }
-
-  .info-card h4,
-  .feature-content h4,
-  .team-content h4 {
-    margin: 0 0 14px;
-    color: var(--sgpa-blue);
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     font-weight: 900;
   }
 
-  .info-card p,
-  .feature-content p,
-  .team-content p {
+  .feature-card p,
+  .role-card p {
     margin: 0;
     color: var(--sgpa-text-soft);
-    line-height: 1.75;
+    line-height: 1.65;
+    font-size: 0.95rem;
   }
 
-  .feature-image-slot,
-  .team-image-slot {
-    background: var(--sgpa-blue-soft);
-    overflow: hidden;
-  }
-
-  .feature-image-slot {
-    aspect-ratio: 9 / 8;
-  }
-
-  .team-image-slot {
-    aspect-ratio: 4 / 3;
-  }
-
-  .feature-image-slot img,
-  .team-image-slot img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .feature-content,
-  .team-content {
-    padding: 24px;
-  }
-
-  .feature-content {
+  .final-cta {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 24px 72px;
     text-align: center;
   }
 
-  .feature-content a {
-    display: inline-flex;
-    margin-top: 18px;
-    text-decoration: none;
-    font-weight: 900;
-    color: var(--sgpa-blue);
-    border-bottom: 3px solid var(--sgpa-yellow);
-    padding-bottom: 3px;
-  }
-
-  .feature-content a:hover {
+  .final-cta h3 {
+    margin: 0 0 22px;
     color: var(--sgpa-blue-dark);
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: 900;
   }
 
   @media (max-width: 960px) {
-    .hero-overlay,
-    .info-grid,
-    .cards-grid,
-    .team-grid {
-      grid-template-columns: 1fr;
+    .features-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
 
-    .hero-image-slot {
-      min-height: 300px;
+    .roles-grid {
+      grid-template-columns: 1fr;
     }
   }
 
   @media (max-width: 640px) {
     .hero,
-    .info-section,
-    .cards-section,
-    .team-section {
+    .features-section,
+    .roles-section,
+    .final-cta {
       padding-inline: 16px;
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
     }
 
     .hero-actions a {

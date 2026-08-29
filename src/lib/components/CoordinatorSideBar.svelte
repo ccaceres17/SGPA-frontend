@@ -1,15 +1,19 @@
 <script>
   import { page } from '$app/stores';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   let isOpen = $state(false);
 
-  const menuItems = [
-    { name: 'Main panel', href: '/coordinator' },
-    { name: 'Projects', href: '/coordinator/projects' },
-    { name: 'Create project', href: '/coordinator/projects/create' },
-    { name: 'Teachers', href: '/coordinator/teachers' },
-    { name: 'Students', href: '/coordinator/students' },
-    { name: 'Create users', href: '/coordinator/create_users' }
+  const workspaceItems = [
+    { nameKey: 'sidebar.mainPanel', href: '/coordinator' },
+    { nameKey: 'sidebar.projects', href: '/coordinator/projects' },
+    { nameKey: 'sidebar.createProject', href: '/coordinator/projects/create' }
+  ];
+
+  const administrationItems = [
+    { nameKey: 'sidebar.teachers', href: '/coordinator/teachers' },
+    { nameKey: 'sidebar.students', href: '/coordinator/students' },
+    { nameKey: 'sidebar.createUsers', href: '/coordinator/create_users' }
   ];
 
   function toggleMenu() {
@@ -53,12 +57,14 @@
 
     <div>
       <h2>SGPA</h2>
-      <p>Coordinator module</p>
+      <p>{t('sidebar.coordinatorModuleLabel')}</p>
     </div>
   </div>
 
   <nav class="menu" aria-label="Coordinator menu">
-    {#each menuItems as item}
+    <span class="menu-section-label">{t('sidebar.workspaceSection')}</span>
+
+    {#each workspaceItems as item}
       <a
         href={item.href}
         class:active={isActive(item.href)}
@@ -66,7 +72,21 @@
         onclick={closeMenu}
       >
         <span class="dot"></span>
-        <span>{item.name}</span>
+        <span>{t(item.nameKey)}</span>
+      </a>
+    {/each}
+
+    <span class="menu-section-label">{t('sidebar.administrationSection')}</span>
+
+    {#each administrationItems as item}
+      <a
+        href={item.href}
+        class:active={isActive(item.href)}
+        aria-current={isActive(item.href) ? 'page' : undefined}
+        onclick={closeMenu}
+      >
+        <span class="dot"></span>
+        <span>{t(item.nameKey)}</span>
       </a>
     {/each}
   </nav>
@@ -82,7 +102,7 @@
     width: 48px;
     height: 48px;
     border-radius: 16px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     border: 1px solid var(--sgpa-border);
     display: grid;
@@ -100,7 +120,7 @@
   .menu-toggle.open {
     left: 316px;
     background: var(--sgpa-blue);
-    color: #ffffff;
+    color: var(--sgpa-on-accent);
   }
 
   .hamburger {
@@ -135,9 +155,7 @@
     width: 300px;
     height: 100vh;
     padding: 1.2rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.18), transparent 13rem),
-      linear-gradient(180deg, #ffffff 0%, #f8fbff 62%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
     color: var(--sgpa-text);
     transform: translateX(-100%);
     transition: transform 0.32s ease;
@@ -157,7 +175,7 @@
     margin-bottom: 1.4rem;
     padding: 1rem;
     border-radius: 20px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-sm);
   }
@@ -168,8 +186,8 @@
     width: 48px;
     height: 48px;
     border-radius: 16px;
-    background: linear-gradient(135deg, var(--sgpa-blue), var(--sgpa-blue-mid));
-    color: #ffffff;
+    background: var(--sgpa-accent-start);
+    color: var(--sgpa-on-accent);
     font-weight: 950;
     font-size: 1.2rem;
   }
@@ -190,7 +208,20 @@
 
   .menu {
     display: grid;
-    gap: 0.55rem;
+    gap: 0.4rem;
+  }
+
+  .menu-section-label {
+    margin: 0.9rem 0.3rem 0.2rem;
+    color: var(--sgpa-muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .menu-section-label:first-child {
+    margin-top: 0.2rem;
   }
 
   .menu a {
@@ -212,14 +243,14 @@
 
   .menu a:hover {
     transform: translateX(4px);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     border-color: var(--sgpa-border);
   }
 
   .menu a.active {
     background: var(--sgpa-blue);
-    color: #ffffff;
+    color: var(--sgpa-on-accent);
     box-shadow: inset 5px 0 0 var(--sgpa-yellow);
   }
 
@@ -254,6 +285,21 @@
 
     .menu-toggle.open {
       left: min(316px, calc(84vw + 14px));
+    }
+  }
+
+  @media (min-width: 721px) {
+    .menu-toggle,
+    .overlay {
+      display: none;
+    }
+
+    .sidebar {
+      transform: none;
+      box-shadow: none;
+      top: 88px;
+      height: calc(100vh - 88px);
+      z-index: 20;
     }
   }
 </style>

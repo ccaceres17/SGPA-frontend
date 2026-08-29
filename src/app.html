@@ -3,6 +3,27 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
+		<script>
+			(function () {
+				try {
+					var stored = localStorage.getItem('sgpa-theme');
+					var theme =
+						stored === 'light' || stored === 'dark'
+							? stored
+							: window.matchMedia('(prefers-color-scheme: dark)').matches
+								? 'dark'
+								: 'light';
+					document.documentElement.setAttribute('data-theme', theme);
+				} catch (e) {}
+
+				try {
+					var match = document.cookie.match(/(?:^|; )sgpa-locale=([^;]*)/);
+					var locale = match && decodeURIComponent(match[1]) === 'es' ? 'es' : 'en';
+					document.documentElement.setAttribute('lang', locale);
+				} catch (e) {}
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

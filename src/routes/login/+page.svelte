@@ -2,6 +2,7 @@
   import { enhance } from '$app/forms';
   import Header from '$lib/components/Header_L.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   let { data, form } = $props();
 
@@ -41,61 +42,14 @@
   <Header />
 
   <main class="login-page">
-    <section class="login-hero">
-      <div class="login-hero-overlay">
-        <div class="login-info">
-          <span class="hero-badge">Institutional access</span>
-
-          <h2 class="title">System login</h2>
-
-          <p class="description">
-            Welcome to the Academic Project Management System. Select your role,
-            enter your credentials, and access the correct SGPA module.
-          </p>
-
-          <div class="info-boxes">
-            <article class="info-card">
-              <h3>Secure access</h3>
-              <p>
-                Your session is validated with the API token and expires automatically
-                according to the JWT expiration time.
-              </p>
-            </article>
-
-            <article class="info-card">
-              <h3>Role-based modules</h3>
-              <p>
-                Students, teachers, and coordinators can only access the module
-                assigned to their authenticated role.
-              </p>
-            </article>
-          </div>
-        </div>
-
-        <div class="login-image-slot">
-          <img
-            src="/images/login-banner.webp"
-            alt="SGPA system access banner"
-            width="1200"
-            height="800"
-            fetchpriority="high"
-          />
-        </div>
-      </div>
-    </section>
-
     <section class="login-section">
       <div class="login-card">
         <div class="card-top-line"></div>
 
         <div class="login-card-header">
-          <span class="login-mini-badge">SGPA</span>
+          <h2 class="login-card-title">{t('login.cardTitle')}</h2>
 
-          <h2 class="login-card-title">Access your account</h2>
-
-          <p class="login-card-subtitle">
-            Enter your credentials and choose the role that matches your account.
-          </p>
+          <p class="login-card-subtitle">{t('login.cardSubtitle')}</p>
         </div>
 
         {#if data?.notice}
@@ -112,55 +66,55 @@
 
         <form method="POST" class="login-form" use:enhance={handleLoginSubmit}>
           <div class="input-group-custom">
-            <label for="email">Email</label>
+            <label for="email">{t('login.emailLabel')}</label>
             <input
               id="email"
               name="email"
               bind:value={email}
               class="login-formulary"
               type="email"
-              placeholder="Enter your email"
+              placeholder={t('login.emailPlaceholder')}
               autocomplete="username"
               required
             />
           </div>
 
           <div class="input-group-custom">
-            <label for="password">Password</label>
+            <label for="password">{t('login.passwordLabel')}</label>
             <input
               id="password"
               name="password"
               class="login-formulary"
               type="password"
-              placeholder="Enter your password"
+              placeholder={t('login.passwordPlaceholder')}
               autocomplete="current-password"
               required
             />
           </div>
 
           <div class="role-selector">
-            <p class="role-title">Select your role</p>
+            <p class="role-title">{t('login.roleTitle')}</p>
 
             <div class="radio-group-horizontal">
               <label class:selected={selectedRole === 'students'} class="radio-option-vertical">
                 <input type="radio" bind:group={selectedRole} name="role" value="students" />
-                <span class="role-pill">Student</span>
+                <span class="role-pill">{t('login.roleStudent')}</span>
               </label>
 
               <label class:selected={selectedRole === 'teacher'} class="radio-option-vertical">
                 <input type="radio" bind:group={selectedRole} name="role" value="teacher" />
-                <span class="role-pill">Teacher</span>
+                <span class="role-pill">{t('login.roleTeacher')}</span>
               </label>
 
               <label class:selected={selectedRole === 'coordinator'} class="radio-option-vertical">
                 <input type="radio" bind:group={selectedRole} name="role" value="coordinator" />
-                <span class="role-pill">Coordinator</span>
+                <span class="role-pill">{t('login.roleCoordinator')}</span>
               </label>
             </div>
           </div>
 
           <button class="btn-primary" type="submit" disabled={submitting}>
-            {submitting ? 'Signing in...' : 'Log in'}
+            {submitting ? t('login.submitting') : t('login.submit')}
           </button>
         </form>
       </div>
@@ -173,106 +127,18 @@
 <style>
   .page-wrapper {
     min-height: 100vh;
-    background:
-      radial-gradient(circle at top left, rgba(11, 45, 105, 0.08), transparent 28rem),
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.14), transparent 20rem),
-      linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 100%);
+    background: var(--sgpa-bg);
   }
 
   .login-page {
     padding-bottom: 70px;
-  }
-
-  .login-hero {
-    padding: 42px 24px 20px;
-  }
-
-  .login-hero-overlay {
-    max-width: 1280px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1.08fr 1fr;
-    gap: 32px;
+    display: flex;
     align-items: center;
-  }
-
-  .hero-badge,
-  .login-mini-badge {
-    display: inline-flex;
-    width: fit-content;
-    background: var(--sgpa-yellow-soft);
-    color: var(--sgpa-blue);
-    font-weight: 950;
-    font-size: 0.82rem;
-    padding: 8px 16px;
-    border-radius: 999px;
-    margin-bottom: 18px;
-    border: 1px solid rgba(242, 183, 5, 0.3);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .title {
-    margin: 0 0 16px;
-    color: var(--sgpa-blue-dark);
-    font-size: clamp(2.1rem, 4vw, 3.8rem);
-    line-height: 1.05;
-    letter-spacing: -0.04em;
-    font-weight: 950;
-  }
-
-  .description {
-    margin: 0 0 26px;
-    color: var(--sgpa-text-soft);
-    font-size: 1.04rem;
-    line-height: 1.8;
-    max-width: 690px;
-  }
-
-  .info-boxes {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-  }
-
-  .info-card {
-    background: #ffffff;
-    border-radius: 22px;
-    padding: 22px;
-    border: 1px solid var(--sgpa-border);
-    border-top: 5px solid var(--sgpa-blue);
-    box-shadow: var(--sgpa-shadow-sm);
-  }
-
-  .info-card h3 {
-    margin: 0 0 10px;
-    color: var(--sgpa-blue);
-    font-weight: 900;
-  }
-
-  .info-card p {
-    margin: 0;
-    color: var(--sgpa-text-soft);
-    line-height: 1.7;
-  }
-
-  .login-image-slot {
-    border-radius: 30px;
-    overflow: hidden;
-    background: #ffffff;
-    border: 1px solid var(--sgpa-border);
-    box-shadow: var(--sgpa-shadow-lg);
-  }
-
-  .login-image-slot img {
-    width: 100%;
-    height: 100%;
-    min-height: 340px;
-    object-fit: cover;
-    display: block;
+    min-height: 80vh;
   }
 
   .login-section {
+    width: 100%;
     padding: 30px 24px;
   }
 
@@ -281,7 +147,7 @@
     margin: 0 auto;
     position: relative;
     overflow: hidden;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border-radius: 28px;
     padding: 2rem;
     border: 1px solid var(--sgpa-border);
@@ -292,7 +158,7 @@
     position: absolute;
     inset: 0 0 auto;
     height: 5px;
-    background: linear-gradient(90deg, var(--sgpa-blue), var(--sgpa-yellow), var(--sgpa-orange));
+    background: var(--sgpa-blue-dark);
   }
 
   .login-card-title {
@@ -344,7 +210,7 @@
     width: 100%;
     padding: 0.9rem 1rem;
     border-radius: 14px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     color: var(--sgpa-text);
   }
@@ -383,7 +249,7 @@
   .radio-option-vertical:hover {
     transform: translateY(-2px);
     border-color: rgba(11, 45, 105, 0.24);
-    background: #ffffff;
+    background: var(--sgpa-surface);
   }
 
   .radio-option-vertical.selected {
@@ -412,22 +278,12 @@
   }
 
   @media (max-width: 900px) {
-    .login-hero-overlay {
-      grid-template-columns: 1fr;
-    }
-
-    .info-boxes,
     .radio-group-horizontal {
       grid-template-columns: 1fr;
-    }
-
-    .login-image-slot img {
-      min-height: 280px;
     }
   }
 
   @media (max-width: 640px) {
-    .login-hero,
     .login-section {
       padding-inline: 16px;
     }

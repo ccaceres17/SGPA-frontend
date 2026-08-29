@@ -3,16 +3,22 @@
   import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/TeacherSideBar.svelte';
   import Dashboard from '$lib/components/Dashboard.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
+
+  let { data } = $props();
 </script>
 
 <Header />
 <SideBar />
 
 <Dashboard
-  roleName="Teacher"
-  eyebrow="Teacher module"
-  title="Assigned project tracking"
-  description="Check academic information, review available projects, and track activity for your assigned projects."
+  eyebrow={t('dashboard.teacher.eyebrow')}
+  title={t('dashboard.teacher.title')}
+  description={t('dashboard.teacher.description')}
+  stats={data.stats}
+  extraStat={{ labelKey: 'dashboard.stats.assignedProjects', value: data.totalProjects }}
+  recentProjects={data.recentProjects}
+  error={data.error}
 />
 
 <Footer />

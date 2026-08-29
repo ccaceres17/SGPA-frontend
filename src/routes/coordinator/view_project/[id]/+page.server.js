@@ -5,6 +5,8 @@ import {
   updateProjectStatus,
   getStatuses
 } from '$lib/server/project-helpers.js';
+import { applyStatusUpdate } from '$lib/server/status-update.js';
+import { getLocaleFromCookies } from '$lib/server/locale.js';
 
 function isCancelledStatus(statusId, statuses = []) {
   const selectedStatus = statuses.find(
@@ -51,8 +53,9 @@ function filterStatusesForCoordinatorSelector(statuses = []) {
 }
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ fetch, params }) {
+export async function load({ fetch, params, cookies }) {
   const projectId = Number(params.id);
+  const locale = getLocaleFromCookies(cookies);
 
   if (!projectId) {
     return {
@@ -64,7 +67,7 @@ export async function load({ fetch, params }) {
   }
 
   try {
-    const details = await getProjectDetails(fetch, 'coordinator', projectId);
+    const details = await getProjectDetails(fetch, 'coordinator', projectId, locale);
     const isProjectCancelled = isCancelledStatus(details.project?.id_status, details.statuses);
 
     return {
@@ -102,26 +105,36 @@ export const actions = {
       });
     }
 
-    try {
-      const statuses = await getStatuses(fetch, 'coordinator');
+    let statuses = [];
 
-      if (isCancelledStatus(statusId, statuses)) {
-        return fail(403, {
-          error: 'Use the Cancel project button to cancel a project.'
-        });
-      }
+    const statusesResult = await applyStatusUpdate(async () => {
+      statuses = await getStatuses(fetch, 'coordinator');
+    });
 
-      await updateProjectStatus(fetch, projectId, statusId);
-
-      return {
-        success: true,
-        message: 'Project status updated successfully.'
-      };
-    } catch (error) {
-      return fail(500, {
-        error: error.message || 'Could not update project status.'
+    if (!statusesResult.success) {
+      return fail(statusesResult.status >= 400 ? statusesResult.status : 500, {
+        error: statusesResult.message
       });
     }
+
+    if (isCancelledStatus(statusId, statuses)) {
+      return fail(403, {
+        error: 'Use the Cancel project button to cancel a project.'
+      });
+    }
+
+    const result = await applyStatusUpdate(() => updateProjectStatus(fetch, projectId, statusId));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, {
+        error: result.message
+      });
+    }
+
+    return {
+      success: true,
+      message: 'Project status updated successfully.'
+    };
   },
 
   cancelProject: async ({ fetch, params }) => {
@@ -133,21 +146,34 @@ export const actions = {
       });
     }
 
-    try {
-      const statuses = await getStatuses(fetch, 'coordinator');
-      const cancelledStatusId = getCancelledStatusId(statuses);
+    let statuses = [];
 
-      await updateProjectStatus(fetch, projectId, cancelledStatusId);
+    const statusesResult = await applyStatusUpdate(async () => {
+      statuses = await getStatuses(fetch, 'coordinator');
+    });
 
-      return {
-        success: true,
-        message: 'Project cancelled successfully.'
-      };
-    } catch (error) {
-      return fail(500, {
-        error: error.message || 'Could not cancel project.'
+    if (!statusesResult.success) {
+      return fail(statusesResult.status >= 400 ? statusesResult.status : 500, {
+        error: statusesResult.message
       });
     }
+
+    const cancelledStatusId = getCancelledStatusId(statuses);
+
+    const result = await applyStatusUpdate(() =>
+      updateProjectStatus(fetch, projectId, cancelledStatusId)
+    );
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, {
+        error: result.message
+      });
+    }
+
+    return {
+      success: true,
+      message: 'Project cancelled successfully.'
+    };
   },
 
   reactivateProject: async ({ fetch, params }) => {
@@ -159,21 +185,34 @@ export const actions = {
       });
     }
 
-    try {
-      const statuses = await getStatuses(fetch, 'coordinator');
-      const activeStatusId = getActiveStatusId(statuses);
+    let statuses = [];
 
-      await updateProjectStatus(fetch, projectId, activeStatusId);
+    const statusesResult = await applyStatusUpdate(async () => {
+      statuses = await getStatuses(fetch, 'coordinator');
+    });
 
-      return {
-        success: true,
-        message: 'Project reactivated successfully.'
-      };
-    } catch (error) {
-      return fail(500, {
-        error: error.message || 'Could not reactivate project.'
+    if (!statusesResult.success) {
+      return fail(statusesResult.status >= 400 ? statusesResult.status : 500, {
+        error: statusesResult.message
       });
     }
+
+    const activeStatusId = getActiveStatusId(statuses);
+
+    const result = await applyStatusUpdate(() =>
+      updateProjectStatus(fetch, projectId, activeStatusId)
+    );
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, {
+        error: result.message
+      });
+    }
+
+    return {
+      success: true,
+      message: 'Project reactivated successfully.'
+    };
   },
 
   assignTeacher: async ({ request, fetch, params }) => {
@@ -193,21 +232,23 @@ export const actions = {
       });
     }
 
-    try {
-      const result = await assignTeacherToProject(fetch, projectId, teacherId);
+    let assignResult;
 
-      return {
-        success: true,
-        message: result?.alreadyAssigned
-          ? 'This teacher is already assigned to the project.'
-          : 'Teacher assigned successfully.'
-      };
-    } catch (error) {
-      return fail(500, {
-        error:
-          error.message ||
-          'Could not assign teacher. The backend may need PUT/DELETE support for project-users.'
+    const result = await applyStatusUpdate(async () => {
+      assignResult = await assignTeacherToProject(fetch, projectId, teacherId);
+    });
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, {
+        error: result.message
       });
     }
+
+    return {
+      success: true,
+      message: assignResult?.alreadyAssigned
+        ? 'This teacher is already assigned to the project.'
+        : 'Teacher assigned successfully.'
+    };
   }
 };

@@ -3,19 +3,14 @@
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/CoordinatorSideBar.svelte';
+  import { createConfirmFlow } from '$lib/client/confirmFlow.svelte.js';
+  import { t } from '$lib/stores/locale.svelte.js';
+  import StatusBadge from '$lib/components/StatusBadge.svelte';
 
   export let data;
   export let form;
 
-  let confirmOpen = false;
-  let pendingForm = null;
-  let allowSubmit = false;
-
-  let modalTitle = 'Confirm action';
-  let modalMessage = 'Are you sure you want to continue?';
-  let modalDetails = '';
-  let modalConfirmText = 'Confirm';
-  let modalVariant = 'info';
+  const confirm = createConfirmFlow();
 
   function fullName(user) {
     if (!user) return 'Unassigned';
@@ -27,49 +22,12 @@
     return String(value).split('T')[0];
   }
 
-  function openConfirmModal(event, config) {
-    if (allowSubmit) {
-      allowSubmit = false;
-      return;
-    }
-
-    event.preventDefault();
-
-    pendingForm = event.currentTarget;
-    modalTitle = config.title;
-    modalMessage = config.message;
-    modalDetails = config.details || '';
-    modalConfirmText = config.confirmText || 'Confirm';
-    modalVariant = config.variant || 'info';
-    confirmOpen = true;
-  }
-
-  function closeConfirm() {
-    confirmOpen = false;
-    pendingForm = null;
-  }
-
-  function confirmAction() {
-    if (!pendingForm) {
-      closeConfirm();
-      return;
-    }
-
-    const formToSubmit = pendingForm;
-
-    confirmOpen = false;
-    pendingForm = null;
-    allowSubmit = true;
-
-    formToSubmit.requestSubmit();
-  }
-
   function handleStatusSubmit(event) {
     const formElement = event.currentTarget;
     const select = formElement.querySelector('select[name="statusId"]');
     const selectedStatus = select?.selectedOptions?.[0]?.textContent?.trim() || 'Selected status';
 
-    openConfirmModal(event, {
+    confirm.request(event, {
       title: 'Update project status?',
       message: 'This action will update the current status of the academic project.',
       details: project
@@ -85,7 +43,7 @@
     const select = formElement.querySelector('select[name="teacherId"]');
     const selectedTeacher = select?.selectedOptions?.[0]?.textContent?.trim() || 'Selected teacher';
 
-    openConfirmModal(event, {
+    confirm.request(event, {
       title: assignedTeacher ? 'Change assigned teacher?' : 'Assign teacher?',
       message: assignedTeacher
         ? 'This action will try to replace the teacher assigned to this project.'
@@ -99,7 +57,7 @@
   }
 
   function handleCancelSubmit(event) {
-    openConfirmModal(event, {
+    confirm.request(event, {
       title: 'Cancel this project?',
       message: 'This action will mark the project as cancelled. Only the coordinator should perform this action.',
       details: project ? `Project: ${project.project_name || 'Unnamed project'}` : '',
@@ -109,7 +67,7 @@
   }
 
   function handleReactivateSubmit(event) {
-    openConfirmModal(event, {
+    confirm.request(event, {
       title: 'Reactivate this project?',
       message: 'This action will reactivate the project and set its status back to Active.',
       details: project ? `Project: ${project.project_name || 'Unnamed project'}` : '',
@@ -133,6 +91,14 @@
 
 <main>
   <div class="content-wrapper">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/coordinator">{t('sidebar.mainPanel')}</a>
+      <span aria-hidden="true">/</span>
+      <a href="/coordinator/projects">{t('sidebar.projects')}</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{project?.project_name || t('reports.unassigned')}</span>
+    </nav>
+
     <header class="main-header">
       <div>
         <span class="eyebrow">Coordinator module</span>
@@ -159,9 +125,7 @@
             <div>
               <span class="eyebrow small">Project information</span>
               <h2>{project.project_name || 'Unnamed project'}</h2>
-              <span class="status-pill" class:cancelled={isProjectCancelled}>
-                {data.statusLabel || 'Unknown'}
-              </span>
+              <StatusBadge category={data.statusCategory || 'other'} label={data.statusLabel} />
             </div>
           </div>
 
@@ -194,8 +158,13 @@
             </div>
 
             <div class="info-item">
-              <span>Research group</span>
-              <strong>{project.id_research_group || 'N/A'}</strong>
+              <span>{t('researchGroups.label')}</span>
+              <strong>
+                {data.researchGroup?.name ?? t('researchGroups.unknown')}
+                {#if data.researchGroup?.isDemo}
+                  <em class="demo-tag">({t('researchGroups.demoLabel')})</em>
+                {/if}
+              </strong>
             </div>
           </div>
         </section>
@@ -263,7 +232,7 @@
               <p>
                 Current teacher:
                 <strong>{fullName(assignedTeacher)}</strong>.
-                If the deployed API does not allow replacing project-users, this action may require a backend update.
+                Replacing an already-assigned teacher may not be supported yet.
               </p>
             {:else}
               <p>This project does not have a teacher assigned yet.</p>
@@ -351,24 +320,22 @@
 <Footer />
 
 <ConfirmModal
-  open={confirmOpen}
-  title={modalTitle}
-  message={modalMessage}
-  details={modalDetails}
-  confirmText={modalConfirmText}
+  open={confirm.state.open}
+  title={confirm.state.title}
+  message={confirm.state.message}
+  details={confirm.state.details}
+  confirmText={confirm.state.confirmText}
   cancelText="Cancel"
-  variant={modalVariant}
-  onCancel={closeConfirm}
-  onConfirm={confirmAction}
+  variant={confirm.state.variant}
+  loading={confirm.state.loading}
+  onCancel={confirm.cancel}
+  onConfirm={confirm.confirm}
 />
 
 <style>
   main {
     min-height: 80vh;
     padding: 2rem 1rem 3rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.12), transparent 22rem),
-      linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 100%);
   }
 
   .content-wrapper {
@@ -383,8 +350,31 @@
   .empty-state {
     border-radius: 28px;
     border: 1px solid var(--sgpa-border);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     box-shadow: var(--sgpa-shadow-md);
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.9rem;
+    color: var(--sgpa-text-soft);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .breadcrumb a {
+    color: var(--sgpa-link);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .breadcrumb [aria-current='page'] {
+    color: var(--sgpa-text);
   }
 
   .main-header {
@@ -394,9 +384,7 @@
     gap: 1.5rem;
     margin-bottom: 1.4rem;
     padding: 1.6rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 18rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
   }
 
   .eyebrow {
@@ -463,7 +451,7 @@
 
   .secondary-link {
     color: var(--sgpa-blue);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-sm);
   }
@@ -472,8 +460,8 @@
     width: 100%;
     margin-top: 1rem;
     border: none;
-    color: #ffffff;
-    background: linear-gradient(135deg, var(--sgpa-blue), var(--sgpa-blue-mid));
+    color: var(--sgpa-on-accent);
+    background: var(--sgpa-accent-start);
     cursor: pointer;
   }
 
@@ -481,8 +469,8 @@
     width: 100%;
     margin-top: 1rem;
     border: none;
-    color: #ffffff;
-    background: linear-gradient(135deg, #b91c1c, #ef4444);
+    color: var(--sgpa-on-accent);
+    background: var(--sgpa-danger, #dc2626);
     cursor: pointer;
   }
 
@@ -490,8 +478,8 @@
     width: 100%;
     margin-top: 1rem;
     border: none;
-    color: #ffffff;
-    background: linear-gradient(135deg, #15803d, #22c55e);
+    color: var(--sgpa-on-accent);
+    background: var(--sgpa-success, #15803d);
     cursor: pointer;
   }
 
@@ -541,7 +529,6 @@
     font-size: clamp(1.45rem, 3vw, 2.15rem);
   }
 
-  .status-pill,
   .count-badge {
     display: inline-flex;
     width: fit-content;
@@ -553,12 +540,6 @@
     border: 1px solid rgba(11, 45, 105, 0.12);
     font-size: 0.82rem;
     font-weight: 950;
-  }
-
-  .status-pill.cancelled {
-    color: #991b1b;
-    background: #fee2e2;
-    border-color: #fecaca;
   }
 
   .description {
@@ -596,6 +577,13 @@
     color: var(--sgpa-blue-dark);
     font-weight: 950;
     word-break: break-word;
+  }
+
+  .demo-tag {
+    color: var(--sgpa-text-soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-style: normal;
   }
 
   .actions-panel {
@@ -639,7 +627,7 @@
     min-height: 44px;
     border-radius: 14px;
     border: 1px solid var(--sgpa-border);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue-dark);
     padding: 0.7rem 0.85rem;
     outline: none;
@@ -699,7 +687,7 @@
     display: grid;
     place-items: center;
     background: var(--sgpa-blue);
-    color: #ffffff;
+    color: var(--sgpa-on-accent);
     font-weight: 950;
     flex-shrink: 0;
   }

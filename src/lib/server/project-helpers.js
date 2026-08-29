@@ -1,4 +1,6 @@
 import { API_BASE_URL, getAuthHeaders } from '$lib/components/Tokens.js';
+import { messages } from '$lib/i18n/messages.js';
+import { translate } from '$lib/i18n/locale.js';
 
 export const ROLE_IDS = {
   student: 1,
@@ -245,6 +247,65 @@ export function normalizeStatus(status) {
   };
 }
 
+export function normalizeResearchGroup(group) {
+  if (Array.isArray(group)) {
+    return {
+      id_research_group: group[0] ?? null,
+      research_group_name: group[1] ?? '',
+      raw: group
+    };
+  }
+
+  return {
+    id_research_group: group?.id_research_group ?? group?.id ?? null,
+    research_group_name: group?.research_group_name ?? group?.name ?? '',
+    raw: group
+  };
+}
+
+/**
+ * Research groups ("Semilleros de Investigación") have a real backend
+ * endpoint (GET /research-groups) that returns names, but it may be
+ * unreachable for a given role/deployment. On failure this returns `[]`
+ * rather than throwing, so callers fall back to demo-labeled names instead
+ * of showing raw numeric IDs to end users.
+ */
+export async function getResearchGroups(fetch, moduleName = 'coordinator') {
+  try {
+    const data = await requestJsonWithReadFallback(fetch, 'research-groups', moduleName);
+    return extractList(data, ['research_groups', 'researchGroups']).map(normalizeResearchGroup);
+  } catch (_) {
+    return [];
+  }
+}
+
+/**
+ * Resolves a project's research-group ID to a real name from the backend
+ * list when available. If the group can't be matched (endpoint unreachable,
+ * or the ID isn't in the returned list), falls back to a clearly-labeled
+ * demo name — deterministic per ID — rather than ever showing the raw
+ * numeric ID to end users.
+ */
+export function getResearchGroupLabel(idResearchGroup, groups = [], locale = 'en') {
+  if (!idResearchGroup) {
+    return { name: translate(messages, 'researchGroups.unknown', locale), isDemo: false };
+  }
+
+  const match = groups.find(
+    (group) => Number(group.id_research_group) === Number(idResearchGroup)
+  );
+
+  if (match?.research_group_name) {
+    return { name: match.research_group_name, isDemo: false };
+  }
+
+  const demoNames = translate(messages, 'researchGroups.demoNames', locale);
+  const index = (Number(idResearchGroup) - 1) % demoNames.length;
+  const name = demoNames[((index % demoNames.length) + demoNames.length) % demoNames.length];
+
+  return { name, isDemo: true };
+}
+
 export function getStatusLabel(idStatus, statuses = []) {
   const status = statuses.find((item) => Number(item.id_status) === Number(idStatus));
 
@@ -259,6 +320,41 @@ export function getStatusLabel(idStatus, statuses = []) {
   };
 
   return map[Number(idStatus)] ?? 'Unknown';
+}
+
+/**
+ * Maps a status name (whatever the backend/fallback labels happen to use,
+ * in English or Spanish) to one of a small set of stable categories, so the
+ * UI can render a consistent badge and dashboard stat regardless of the
+ * exact wording the status list returns.
+ */
+export function getStatusCategory(idStatus, statuses = []) {
+  const label = String(getStatusLabel(idStatus, statuses) || '').toLowerCase();
+
+  if (label.includes('cancel')) return 'cancelled';
+  if (label.includes('complet')) return 'completed';
+  if (label.includes('review') || label.includes('revis') || label.includes('pend')) {
+    return 'pending';
+  }
+  if (label.includes('activ')) return 'active';
+
+  return 'other';
+}
+
+/**
+ * Real counts by status category for a role's project list — used to drive
+ * dashboard statistics from actual backend data instead of placeholder
+ * numbers.
+ */
+export function summarizeProjectsByStatus(projects = [], statuses = []) {
+  const counts = { active: 0, pending: 0, completed: 0, cancelled: 0, other: 0 };
+
+  for (const project of projects) {
+    const category = getStatusCategory(project.id_status, statuses);
+    counts[category] = (counts[category] ?? 0) + 1;
+  }
+
+  return counts;
 }
 
 export function getUserFullName(user) {
@@ -434,12 +530,13 @@ export function getParticipantsByProject(relations = [], users = [], projectId) 
     .filter((participant) => participant.user);
 }
 
-export async function getProjectDetails(fetch, moduleName, projectId) {
-  const [project, users, relations, statuses] = await Promise.all([
+export async function getProjectDetails(fetch, moduleName, projectId, locale = 'en') {
+  const [project, users, relations, statuses, researchGroups] = await Promise.all([
     getProjectById(fetch, projectId, moduleName),
     getUsers(fetch, moduleName),
     getProjectUsers(fetch, moduleName).catch(() => []),
-    getStatuses(fetch, moduleName)
+    getStatuses(fetch, moduleName),
+    getResearchGroups(fetch, moduleName)
   ]);
 
   const teachers = getTeachers(users);
@@ -457,11 +554,39 @@ export async function getProjectDetails(fetch, moduleName, projectId) {
     relations,
     statuses,
     statusLabel: getStatusLabel(project.id_status, statuses),
+    statusCategory: getStatusCategory(project.id_status, statuses),
+    researchGroup: getResearchGroupLabel(project.id_research_group, researchGroups, locale),
     assignedTeacher,
     assignedTeacherRelation,
     enrolledStudents,
     participants
   };
+}
+
+/**
+ * Builds the small set of real-data rows the role dashboards show under
+ * "Recent projects" — resolves the assigned teacher and research group name
+ * for each row so the table never has to show a raw ID. `projects` should
+ * already be limited/sorted by the caller (most recent first).
+ */
+export function buildRecentProjectsView(
+  projects = [],
+  { users = [], relations = [], statuses = [], researchGroups = [], locale = 'en', viewHrefFor } = {}
+) {
+  return projects.map((project) => {
+    const teacher = getTeacherAssignedToProject(relations, users, project.id_project);
+
+    return {
+      id_project: project.id_project,
+      project_name: project.project_name || 'Unnamed project',
+      teacherName: teacher ? getUserFullName(teacher) : null,
+      researchGroup: getResearchGroupLabel(project.id_research_group, researchGroups, locale),
+      statusLabel: getStatusLabel(project.id_status, statuses),
+      statusCategory: getStatusCategory(project.id_status, statuses),
+      startDate: project.start_date || '',
+      viewHref: viewHrefFor ? viewHrefFor(project.id_project) : null
+    };
+  });
 }
 
 export async function enrollStudentInProject(fetch, projectId, studentId) {
@@ -496,7 +621,7 @@ export async function assignTeacherToProject(fetch, projectId, teacherId) {
     }
 
     throw new Error(
-      'This project already has a teacher assigned. The current deployed API does not expose PUT/DELETE for project-users, so replacing the teacher requires a backend update.'
+      'This project already has a teacher assigned. Replacing an already-assigned teacher is not currently supported.'
     );
   }
 

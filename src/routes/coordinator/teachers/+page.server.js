@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { API_BASE_URL, getAuthHeaders } from '$lib/components/Tokens.js';
 import { getUsers, ROLE_IDS } from '$lib/server/project-helpers.js';
+import { applyStatusUpdate } from '$lib/server/status-update.js';
 
 function toBool(value) {
   return value === true || String(value).trim().toLowerCase() === 'true';
@@ -52,7 +53,9 @@ async function apiRequest(fetch, path, method, payload) {
         ? data
         : data?.detail || data?.message || data?.error || JSON.stringify(data);
 
-    throw new Error(`Status ${response.status}. ${detail}`);
+    const error = new Error(`Status ${response.status}. ${detail}`);
+    error.status = response.status;
+    throw error;
   }
 
   return data;
@@ -76,44 +79,33 @@ function buildFullPayload(user, isActive) {
   return payload;
 }
 
-async function tryPersistUserStatus(fetch, userId, isActive) {
-  const attempts = [];
-
+/**
+ * Tries PATCH first, then falls back to a full PUT if the API does not
+ * support partial updates. If both attempts fail, this throws — it never
+ * swallows the failure, so the caller (and applyStatusUpdate) can never
+ * mistake a rejected mutation for a persisted one.
+ */
+async function persistUserStatus(fetch, userId, isActive) {
   try {
     await apiRequest(fetch, `users/${userId}`, 'PATCH', {
       is_active: Boolean(isActive)
     });
 
-    return {
-      persisted: true,
-      error: null
-    };
-  } catch (error) {
-    attempts.push(error.message);
+    return;
+  } catch (_patchError) {
+    // Fall through to the PUT fallback below.
   }
 
-  try {
-    const users = await getUsers(fetch, 'coordinator');
-    const user = users.find((item) => Number(item.id_user) === Number(userId));
+  const users = await getUsers(fetch, 'coordinator');
+  const user = users.find((item) => Number(item.id_user) === Number(userId));
 
-    if (!user) {
-      throw new Error('User not found for PUT fallback.');
-    }
-
-    await apiRequest(fetch, `users/${userId}`, 'PUT', buildFullPayload(user, isActive));
-
-    return {
-      persisted: true,
-      error: null
-    };
-  } catch (error) {
-    attempts.push(error.message);
+  if (!user) {
+    const error = new Error('User not found.');
+    error.status = 404;
+    throw error;
   }
 
-  return {
-    persisted: false,
-    error: attempts.at(-1) || 'The API did not persist the change.'
-  };
+  await apiRequest(fetch, `users/${userId}`, 'PUT', buildFullPayload(user, isActive));
 }
 
 /** @type {import('./$types').PageServerLoad} */
@@ -157,20 +149,19 @@ export const actions = {
       });
     }
 
-    const result = await tryPersistUserStatus(fetch, userId, isActive);
+    const result = await applyStatusUpdate(() => persistUserStatus(fetch, userId, isActive));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, {
+        error: result.message
+      });
+    }
 
     return {
       success: true,
-      visualOnly: !result.persisted,
       visualUserId: userId,
       visualIsActive: isActive,
-      message: isActive
-        ? result.persisted
-          ? 'Teacher enabled successfully.'
-          : 'Teacher enabled visually. The API did not persist the change yet.'
-        : result.persisted
-          ? 'Teacher disabled successfully.'
-          : 'Teacher disabled visually. The API did not persist the change yet.'
+      message: isActive ? 'Teacher enabled successfully.' : 'Teacher disabled successfully.'
     };
   }
 };

@@ -6,9 +6,13 @@ import {
   getStatuses,
   ROLE_IDS,
   getStatusLabel,
-  updateProjectStatus
+  getStatusCategory,
+  updateProjectStatus,
+  getResearchGroups,
+  getResearchGroupLabel
 } from '$lib/server/project-helpers.js';
 import { applyStatusUpdate } from '$lib/server/status-update.js';
+import { getLocaleFromCookies } from '$lib/server/locale.js';
 
 // Cookie name used by a previous implementation that faked a "successful"
 // status update in the browser when the backend actually rejected it. It is
@@ -94,12 +98,15 @@ export async function load({ fetch, params, locals, cookies }) {
     };
   }
 
+  const locale = getLocaleFromCookies(cookies);
+
   try {
-    const [projects, users, relations, statuses] = await Promise.all([
+    const [projects, users, relations, statuses, researchGroups] = await Promise.all([
       getProjects(fetch, 'teacher'),
       getUsers(fetch, 'teacher'),
       getProjectUsers(fetch, 'teacher').catch(() => []),
-      getStatuses(fetch, 'teacher')
+      getStatuses(fetch, 'teacher'),
+      getResearchGroups(fetch, 'teacher')
     ]);
 
     const originalProject =
@@ -139,6 +146,8 @@ export async function load({ fetch, params, locals, cookies }) {
       statuses,
       teacherStatuses: filterStatusesForTeacher(statuses),
       statusLabel: getStatusLabel(project.id_status, statuses),
+      statusCategory: getStatusCategory(project.id_status, statuses),
+      researchGroup: getResearchGroupLabel(project.id_research_group, researchGroups, locale),
       isAssignedToCurrentTeacher,
       isProjectCancelled
     };
@@ -244,9 +253,7 @@ export const actions = {
       };
     } catch (error) {
       return fail(500, {
-        error:
-          error.message ||
-          'Could not update project status. The backend may only allow coordinators to perform this action.'
+        error: error.message || 'Could not update project status. Please try again.'
       });
     }
   }

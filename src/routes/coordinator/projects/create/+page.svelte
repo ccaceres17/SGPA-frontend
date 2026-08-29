@@ -10,6 +10,7 @@
 
   $: teachers = data?.teachers || [];
   $: statuses = data?.statuses || [];
+  $: researchGroupOptions = data?.researchGroupOptions || [];
   $: error = form?.error || data?.error;
   $: values = form?.values || {};
 
@@ -119,14 +120,16 @@
 
           <div class="field">
             <label for="id_research_group">Research group</label>
-            <input
-              id="id_research_group"
-              name="id_research_group"
-              type="number"
-              min="1"
-              value={values.id_research_group || ''}
-              placeholder="Optional"
-            />
+            <select id="id_research_group" name="id_research_group">
+              {#each researchGroupOptions as group}
+                <option
+                  value={group.id}
+                  selected={String(values.id_research_group || data.defaultResearchGroupId) === String(group.id)}
+                >
+                  {group.name}
+                </option>
+              {/each}
+            </select>
           </div>
 
           <div class="field full">
@@ -168,9 +171,6 @@
   main {
     min-height: 80vh;
     padding: 2rem 1rem 3rem;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.12), transparent 22rem),
-      linear-gradient(180deg, #ffffff 0%, var(--sgpa-bg) 100%);
   }
 
   .content-wrapper {
@@ -186,9 +186,7 @@
     margin-bottom: 1.6rem;
     padding: 1.6rem;
     border-radius: 28px;
-    background:
-      radial-gradient(circle at top right, rgba(242, 183, 5, 0.16), transparent 18rem),
-      linear-gradient(135deg, #ffffff 0%, var(--sgpa-blue-soft) 100%);
+    background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
     box-shadow: var(--sgpa-shadow-md);
   }
@@ -231,7 +229,7 @@
     min-height: 42px;
     padding: 0.75rem 1rem;
     border-radius: 999px;
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     border: 1px solid var(--sgpa-border);
     text-decoration: none;
@@ -249,7 +247,7 @@
   }
 
   .form-card {
-    background: #ffffff;
+    background: var(--sgpa-surface);
     border-radius: 28px;
     box-shadow: var(--sgpa-shadow-md);
     padding: clamp(1.2rem, 3vw, 2rem);
@@ -325,7 +323,7 @@
     border-radius: 14px;
     padding: 0.85rem 1rem;
     color: var(--sgpa-text);
-    background: #ffffff;
+    background: var(--sgpa-surface);
     outline: none;
   }
 
@@ -369,7 +367,7 @@
   }
 
   .secondary-btn {
-    background: #ffffff;
+    background: var(--sgpa-surface);
     color: var(--sgpa-blue);
     border: 1px solid var(--sgpa-border-strong);
   }

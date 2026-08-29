@@ -1,5 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { API_BASE_URL, getAuthHeaders } from '$lib/components/Tokens.js';
+import { getResearchGroups } from '$lib/server/project-helpers.js';
+import { getLocaleFromCookies } from '$lib/server/locale.js';
+import { translate } from '$lib/i18n/locale.js';
+import { messages } from '$lib/i18n/messages.js';
 
 const PROJECT_USER_TEACHER_ROLE_ID = 3;
 const DEFAULT_RESEARCH_GROUP_ID = 1;
@@ -166,7 +170,7 @@ async function apiFetch(fetch, path, options = {}) {
       data?.message ||
       data?.error ||
       text ||
-      `API returned status ${response.status}.`;
+      `Request failed with status ${response.status}.`;
 
     throw new Error(backendMessage);
   }
@@ -315,21 +319,45 @@ async function assignTeacherToProject(fetch, { id_project, id_user, assigned_dat
 }
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ fetch, locals }) {
+function getResearchGroupOptions(researchGroups, locale) {
+  if (researchGroups.length > 0) {
+    return researchGroups.map((group) => ({
+      id: group.id_research_group,
+      name: group.research_group_name,
+      isDemo: false
+    }));
+  }
+
+  const demoNames = translate(messages, 'researchGroups.demoNames', locale);
+  const demoLabel = translate(messages, 'researchGroups.demoLabel', locale);
+
+  return demoNames.map((name, index) => ({
+    id: index + 1,
+    name: `${name} (${demoLabel})`,
+    isDemo: true
+  }));
+}
+
+export async function load({ fetch, locals, cookies }) {
   const currentCoordinatorId = getCurrentCoordinatorId(locals);
+  const locale = getLocaleFromCookies(cookies);
 
   if (!currentCoordinatorId) {
     return {
       teachers: [],
       defaultTeacherId: null,
       defaultResearchGroupId: DEFAULT_RESEARCH_GROUP_ID,
+      researchGroupOptions: getResearchGroupOptions([], locale),
       statuses: DEFAULT_STATUSES,
       error: 'Could not identify the logged-in coordinator.'
     };
   }
 
   try {
-    const users = await getAllUsers(fetch);
+    const [users, researchGroups] = await Promise.all([
+      getAllUsers(fetch),
+      getResearchGroups(fetch, 'coordinator')
+    ]);
 
     const teachers = users
       .filter((user) => Number(user.id_role) === PROJECT_USER_TEACHER_ROLE_ID)
@@ -338,10 +366,13 @@ export async function load({ fetch, locals }) {
         full_name: getUserFullName(teacher)
       }));
 
+    const researchGroupOptions = getResearchGroupOptions(researchGroups, locale);
+
     return {
       teachers,
       defaultTeacherId: teachers[0]?.id_user ?? null,
-      defaultResearchGroupId: DEFAULT_RESEARCH_GROUP_ID,
+      defaultResearchGroupId: researchGroupOptions[0]?.id ?? DEFAULT_RESEARCH_GROUP_ID,
+      researchGroupOptions,
       statuses: DEFAULT_STATUSES,
       currentCoordinatorId
     };
@@ -350,6 +381,7 @@ export async function load({ fetch, locals }) {
       teachers: [],
       defaultTeacherId: null,
       defaultResearchGroupId: DEFAULT_RESEARCH_GROUP_ID,
+      researchGroupOptions: getResearchGroupOptions([], locale),
       statuses: DEFAULT_STATUSES,
       currentCoordinatorId,
       error: error.message || 'Could not load form information.'
