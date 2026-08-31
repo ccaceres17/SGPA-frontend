@@ -82,7 +82,9 @@ export const actions = {
     if (!loginResult.ok) {
       const ERROR_KEY_BY_TYPE = {
         forbidden: 'errors.forbidden',
-        'service-unavailable': 'errors.serviceUnavailable'
+        'service-unavailable': 'errors.serviceUnavailable',
+        'account-not-claimed': 'errors.accountNotClaimed',
+        'account-disabled': 'errors.accountDisabled'
       };
 
       const errorKey = ERROR_KEY_BY_TYPE[loginResult.error?.type] || 'errors.invalidCredentials';

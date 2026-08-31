@@ -148,3 +148,25 @@ test('classifyLoginError maps status codes to distinct, non-leaking { type, mess
     message: 'The service is temporarily unavailable. Please try again shortly.'
   });
 });
+
+test('classifyLoginError distinguishes a never-claimed invited account from a disabled one', () => {
+  const notClaimed = classifyLoginError(403, { detail: 'ACCOUNT_NOT_CLAIMED' });
+  assert.equal(notClaimed.type, 'account-not-claimed');
+
+  const disabled = classifyLoginError(403, { detail: 'ACCOUNT_DISABLED' });
+  assert.equal(disabled.type, 'account-disabled');
+
+  // A plain 403 with no discriminator still falls through to the existing
+  // generic forbidden branch, unchanged.
+  const genericForbidden = classifyLoginError(403, null);
+  assert.equal(genericForbidden.type, 'forbidden');
+});
+
+test('a 403 ACCOUNT_NOT_CLAIMED response is classified correctly end-to-end through performLogin', async () => {
+  const fetchMock = async () => jsonResponse(403, { detail: 'ACCOUNT_NOT_CLAIMED' });
+
+  const result = await performLogin(fetchMock, BASE_URL, 'invitee@example.com', 'whatever');
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error.type, 'account-not-claimed');
+});

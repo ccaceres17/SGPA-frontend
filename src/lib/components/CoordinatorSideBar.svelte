@@ -1,19 +1,20 @@
 <script>
   import { page } from '$app/stores';
   import { t } from '$lib/stores/locale.svelte.js';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   let isOpen = $state(false);
 
   const workspaceItems = [
-    { nameKey: 'sidebar.mainPanel', href: '/coordinator' },
-    { nameKey: 'sidebar.projects', href: '/coordinator/projects' },
-    { nameKey: 'sidebar.createProject', href: '/coordinator/projects/create' }
+    { nameKey: 'sidebar.mainPanel', href: '/coordinator', icon: 'list' },
+    { nameKey: 'sidebar.projects', href: '/coordinator/projects', icon: 'folder' },
+    { nameKey: 'sidebar.createProject', href: '/coordinator/projects/create', icon: 'book-open' }
   ];
 
   const administrationItems = [
-    { nameKey: 'sidebar.teachers', href: '/coordinator/teachers' },
-    { nameKey: 'sidebar.students', href: '/coordinator/students' },
-    { nameKey: 'sidebar.createUsers', href: '/coordinator/create_users' }
+    { nameKey: 'sidebar.teachers', href: '/coordinator/teachers', icon: 'user-circle' },
+    { nameKey: 'sidebar.students', href: '/coordinator/students', icon: 'graduation-cap' },
+    { nameKey: 'sidebar.createUsers', href: '/coordinator/create_users', icon: 'users' }
   ];
 
   function toggleMenu() {
@@ -36,7 +37,7 @@
   class="menu-toggle"
   class:open={isOpen}
   type="button"
-  aria-label={isOpen ? 'Close side menu' : 'Open side menu'}
+  aria-label={isOpen ? t('nav.closeMenu') : t('nav.openMenu')}
   aria-expanded={isOpen}
   onclick={toggleMenu}
 >
@@ -48,7 +49,7 @@
 </button>
 
 {#if isOpen}
-  <button class="overlay" type="button" aria-label="Close side menu" onclick={closeMenu}></button>
+  <button class="overlay" type="button" aria-label={t('nav.closeMenu')} onclick={closeMenu}></button>
 {/if}
 
 <aside class="sidebar" class:open={isOpen}>
@@ -61,7 +62,7 @@
     </div>
   </div>
 
-  <nav class="menu" aria-label="Coordinator menu">
+  <nav class="menu" aria-label={t('sidebar.coordinatorModuleLabel')}>
     <span class="menu-section-label">{t('sidebar.workspaceSection')}</span>
 
     {#each workspaceItems as item}
@@ -71,7 +72,7 @@
         aria-current={isActive(item.href) ? 'page' : undefined}
         onclick={closeMenu}
       >
-        <span class="dot"></span>
+        <Icon name={item.icon} size={18} class="menu-icon" />
         <span>{t(item.nameKey)}</span>
       </a>
     {/each}
@@ -85,7 +86,7 @@
         aria-current={isActive(item.href) ? 'page' : undefined}
         onclick={closeMenu}
       >
-        <span class="dot"></span>
+        <Icon name={item.icon} size={18} class="menu-icon" />
         <span>{t(item.nameKey)}</span>
       </a>
     {/each}
@@ -254,18 +255,8 @@
     box-shadow: inset 5px 0 0 var(--sgpa-yellow);
   }
 
-  .dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 999px;
-    background: var(--sgpa-border-strong);
+  :global(.menu-icon) {
     flex: 0 0 auto;
-  }
-
-  .menu a.active .dot,
-  .menu a:hover .dot {
-    background: var(--sgpa-yellow);
-    box-shadow: 0 0 0 5px rgba(242, 183, 5, 0.18);
   }
 
   .overlay {

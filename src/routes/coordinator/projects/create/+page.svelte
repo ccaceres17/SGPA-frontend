@@ -1,7 +1,8 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import Header from '$lib/components/Header_St.svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/CoordinatorSideBar.svelte';
+  import { t } from '$lib/stores/locale.svelte.js';
 
   export let data;
   export let form;
@@ -26,65 +27,60 @@
   <div class="content-wrapper">
     <header class="main-header">
       <div class="header-copy">
-        <span class="eyebrow">Coordinator module</span>
-        <h1>Create project</h1>
-        <p>
-          Register a new academic project and assign the responsible teacher from the
-          initial system form.
-        </p>
+        <span class="eyebrow">{t('sidebar.coordinatorModuleLabel')}</span>
+        <h1>{t('pages.createProject.heading')}</h1>
+        <p>{t('pages.createProject.description')}</p>
       </div>
 
       <a href="/coordinator/projects" class="back-link">
-        Back to projects
+        {t('pages.createProject.backToProjects')}
       </a>
     </header>
 
     {#if error}
-      <div class="error-msg">⚠️ {error}</div>
+      <div class="error-msg"><Icon name="alert-triangle" size={16} /> {error}</div>
     {/if}
 
     {#if form?.success}
-      <div class="success-msg">✅ {form.message}</div>
+      <div class="success-msg"><Icon name="check-circle" size={16} /> {form.message}</div>
     {/if}
 
     <section class="form-card">
       <div class="form-intro">
-        <span class="form-icon">📘</span>
+        <span class="form-icon"><Icon name="book-open" size={22} /></span>
 
         <div>
-          <h2>Project information</h2>
-          <p>
-            Fill in the main information. Fields marked with an asterisk are required.
-          </p>
+          <h2>{t('pages.createProject.formIntroHeading')}</h2>
+          <p>{t('pages.createProject.formIntroDescription')}</p>
         </div>
       </div>
 
       <form method="POST" class="project-form" onsubmit={handleSubmit}>
         <div class="grid">
           <div class="field full">
-            <label for="project_name">Project name *</label>
+            <label for="project_name">{t('pages.createProject.projectNameLabel')}</label>
             <input
               id="project_name"
               name="project_name"
               type="text"
               value={values.project_name || ''}
-              placeholder="Example: Academic tracking system"
+              placeholder={t('pages.createProject.projectNamePlaceholder')}
               required
             />
           </div>
 
           <div class="field full">
-            <label for="description">Description</label>
+            <label for="description">{t('pages.createProject.descriptionLabel')}</label>
             <textarea
               id="description"
               name="description"
               rows="5"
-              placeholder="Briefly describe the purpose, scope, or focus of the project"
+              placeholder={t('pages.createProject.descriptionPlaceholder')}
             >{values.description || ''}</textarea>
           </div>
 
           <div class="field">
-            <label for="start_date">Start date *</label>
+            <label for="start_date">{t('pages.createProject.startDateLabel')}</label>
             <input
               id="start_date"
               name="start_date"
@@ -95,7 +91,7 @@
           </div>
 
           <div class="field">
-            <label for="end_date">End date</label>
+            <label for="end_date">{t('pages.createProject.endDateLabel')}</label>
             <input
               id="end_date"
               name="end_date"
@@ -105,7 +101,7 @@
           </div>
 
           <div class="field">
-            <label for="id_status">Status</label>
+            <label for="id_status">{t('pages.createProject.statusLabel')}</label>
             <select id="id_status" name="id_status">
               {#each statuses as status}
                 <option
@@ -119,7 +115,7 @@
           </div>
 
           <div class="field">
-            <label for="id_research_group">Research group</label>
+            <label for="id_research_group">{t('pages.createProject.researchGroupLabel')}</label>
             <select id="id_research_group" name="id_research_group">
               {#each researchGroupOptions as group}
                 <option
@@ -133,9 +129,9 @@
           </div>
 
           <div class="field full">
-            <label for="teacher_id">Assigned teacher *</label>
+            <label for="teacher_id">{t('pages.createProject.assignedTeacherLabel')}</label>
             <select id="teacher_id" name="teacher_id" required>
-              <option value="">Select a teacher</option>
+              <option value="">{t('pages.createProject.selectTeacherOption')}</option>
 
               {#each teachers as teacher}
                 <option
@@ -150,13 +146,13 @@
         </div>
 
         <div class="actions">
-          <a href="/coordinator/projects" class="secondary-btn">Cancel</a>
+          <a href="/coordinator/projects" class="secondary-btn">{t('pages.createProject.cancelButton')}</a>
 
           <button type="submit" class="primary-btn" disabled={submitting}>
             {#if submitting}
-              Creating project...
+              {t('pages.createProject.creatingButton')}
             {:else}
-              Create project
+              {t('pages.createProject.createButton')}
             {/if}
           </button>
         </div>
@@ -164,8 +160,6 @@
     </section>
   </div>
 </main>
-
-<Footer />
 
 <style>
   main {

@@ -1,4 +1,6 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
+
   export let name = 'Academic project';
   export let schedule = 'No schedule defined';
 
@@ -9,7 +11,7 @@
 
 <div class="card">
   <div class="left">
-    <div class="icon">📁</div>
+    <div class="icon"><Icon name="folder" size={22} /></div>
 
     <div class="info">
       <h3>{name}</h3>

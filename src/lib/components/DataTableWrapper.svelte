@@ -55,16 +55,23 @@
     };
   });
 
-  // Re-initializes on row changes and also on locale changes, so the
-  // underlying (non-Svelte) DataTable's own chrome — search placeholder,
-  // pagination labels — picks up translated text when the user toggles
-  // language, instead of staying frozen in whatever language it first built.
-  $: if (mounted && localeState.current) {
+  // Re-initializes on row changes and also on locale changes. Locale changes
+  // so the underlying (non-Svelte) DataTable's own chrome — search
+  // placeholder, pagination labels — picks up translated text when the user
+  // toggles language. Row changes so a caller-side filter (Phase 5 search
+  // dropdowns) actually takes effect: simple-datatables takes over the DOM
+  // on init, so Svelte's {#each rows} alone can't update it afterward — the
+  // table must be torn down and rebuilt with the new row set.
+  $: if (mounted) {
+    void rows;
+    void localeState.current;
     initTable();
   }
 </script>
 
 <div class="datatable-card">
+  <slot name="filters" />
+
   {#if rows.length > 0}
     <table bind:this={tableElement} id={tableId} class="sgpa-datatable">
       <thead>

@@ -1,5 +1,6 @@
 <script>
   import { t } from '$lib/stores/locale.svelte.js';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   export let data;
   export let backHref = '/';
@@ -20,10 +21,10 @@
 
 <main class="report-page">
   <section class="screen-actions">
-    <a href={backHref} class="secondary-link">{backLabel || t('reports.back')}</a>
+    <a href={backHref} class="secondary-link"><Icon name="chevron-left" size={14} /> {backLabel || t('reports.back')}</a>
 
     <button type="button" class="print-btn" onclick={printReport}>
-      {t('reports.downloadPdf')}
+      <Icon name="download" size={14} /> {t('reports.downloadPdf')}
     </button>
   </section>
 
@@ -179,24 +180,12 @@
     box-shadow: var(--sgpa-shadow-sm, 0 8px 18px rgba(15, 35, 70, 0.08));
   }
 
-  .secondary-link::before {
-    content: '←';
-    font-size: 0.95rem;
-    line-height: 1;
-  }
-
   .print-btn {
     border: 1px solid rgba(11, 45, 105, 0.18);
     color: #ffffff;
     background: var(--sgpa-blue, #0d468d);
     cursor: pointer;
     box-shadow: 0 12px 26px rgba(11, 45, 105, 0.18);
-  }
-
-  .print-btn::before {
-    content: '📄';
-    font-size: 0.95rem;
-    line-height: 1;
   }
 
   .secondary-link:hover {

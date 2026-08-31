@@ -27,7 +27,7 @@ export async function load({ fetch, locals, cookies }) {
       totalProjects: 0,
       stats: EMPTY_STATS,
       recentProjects: [],
-      error: 'Could not identify the logged-in teacher.'
+      error: 'Could not identify the logged-in professor.'
     };
   }
 

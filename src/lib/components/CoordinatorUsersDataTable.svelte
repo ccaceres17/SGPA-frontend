@@ -1,5 +1,6 @@
 <script>
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+  import Icon from '$lib/components/icons/Icon.svelte';
   import { createConfirmFlow } from '$lib/client/confirmFlow.svelte.js';
   import { t } from '$lib/stores/locale.svelte.js';
 
@@ -12,6 +13,7 @@
   export let userType = 'users';
 
   let search = '';
+  let statusFilter = '';
   let page = 1;
   const pageSize = 10;
 
@@ -32,8 +34,22 @@
     return `${first}${last}`.toUpperCase() || 'U';
   }
 
+  function lifecycleStatus(user) {
+    if (user.lifecycleStatus) return user.lifecycleStatus;
+    // Defensive fallback for any caller that hasn't attached lifecycleStatus.
+    return user.is_active ? 'active' : 'disabled';
+  }
+
   function statusText(user) {
-    return user.is_active ? t('ui.activeStatus') : t('ui.inactive');
+    const status = lifecycleStatus(user);
+    if (status === 'pending') return t('ui.invitationPending');
+    if (status === 'expired') return t('ui.invitationExpired');
+    return status === 'active' ? t('ui.activeStatus') : t('ui.inactive');
+  }
+
+  function formatDate(value) {
+    if (!value) return '';
+    return String(value).split('T')[0];
   }
 
   function openConfirmModal(event, user) {
@@ -63,7 +79,8 @@
     if (hasVisualOverride && Number(user.id_user) === visualUserId) {
       return {
         ...user,
-        is_active: visualIsActive
+        is_active: visualIsActive,
+        lifecycleStatus: visualIsActive ? 'active' : 'disabled'
       };
     }
 
@@ -71,6 +88,8 @@
   });
 
   $: filteredUsers = displayedUsers.filter((user) => {
+    if (statusFilter && lifecycleStatus(user) !== statusFilter) return false;
+
     const query = search.trim().toLowerCase();
 
     if (!query) return true;
@@ -116,7 +135,7 @@
   <section class="table-card">
     <div class="table-toolbar">
       <div class="search-box">
-        <span>⌕</span>
+        <span><Icon name="search" size={16} /></span>
         <input
           bind:value={search}
           on:input={resetPage}
@@ -124,6 +143,17 @@
           placeholder={searchPlaceholder || t('ui.search')}
           aria-label={t('ui.search')}
         />
+      </div>
+
+      <div class="status-filter">
+        <label for="account-status-filter">{t('ui.filterByAccountStatus')}</label>
+        <select id="account-status-filter" bind:value={statusFilter} on:change={resetPage}>
+          <option value="">{t('ui.allAccountStatuses')}</option>
+          <option value="active">{t('ui.activeStatus')}</option>
+          <option value="pending">{t('ui.invitationPending')}</option>
+          <option value="expired">{t('ui.invitationExpired')}</option>
+          <option value="disabled">{t('ui.inactive')}</option>
+        </select>
       </div>
 
       <span class="records-pill">
@@ -150,16 +180,24 @@
 
           <tbody>
             {#each paginatedUsers as user}
-              <tr class:inactive-row={!user.is_active}>
+              {@const status = lifecycleStatus(user)}
+              <tr class:inactive-row={status !== 'active'}>
                 <td>
                   <div class="user-cell">
-                    <div class="avatar" class:inactive={!user.is_active}>
+                    <div class="avatar" class:inactive={status !== 'active'}>
                       {initials(user)}
                     </div>
 
                     <div>
                       <strong>{fullName(user)}</strong>
                       <span>ID: {user.id_user}</span>
+                      {#if status === 'active' || status === 'disabled'}
+                        {#if user.claimed_at}
+                          <span>{t('ui.claimedOn', { date: formatDate(user.claimed_at) })}</span>
+                        {/if}
+                      {:else if user.claim_expires_at}
+                        <span>{t('ui.invitationExpiresOn', { date: formatDate(user.claim_expires_at) })}</span>
+                      {/if}
                     </div>
                   </div>
                 </td>
@@ -169,24 +207,31 @@
                 <td>{user.phone_number || user.phone || t('ui.notRegistered')}</td>
 
                 <td>
-                  <span class="status-badge" class:inactive={!user.is_active}>
+                  <span class="status-badge" class:inactive={status === 'disabled'} class:pending={status === 'pending' || status === 'expired'}>
                     {statusText(user)}
                   </span>
                 </td>
 
                 <td class="action-cell">
-                  <form method="POST" action="?/toggleStatus" on:submit={(event) => openConfirmModal(event, user)}>
-                    <input type="hidden" name="id_user" value={user.id_user} />
-                    <input type="hidden" name="is_active" value={user.is_active ? 'false' : 'true'} />
+                  {#if status === 'active' || status === 'disabled'}
+                    <form method="POST" action="?/toggleStatus" on:submit={(event) => openConfirmModal(event, user)}>
+                      <input type="hidden" name="id_user" value={user.id_user} />
+                      <input type="hidden" name="is_active" value={user.is_active ? 'false' : 'true'} />
 
-                    <button
-                      type="submit"
-                      class:enable-btn={!user.is_active}
-                      class:disable-btn={user.is_active}
-                    >
-                      {user.is_active ? t('ui.disable') : t('ui.enable')}
-                    </button>
-                  </form>
+                      <button
+                        type="submit"
+                        class:enable-btn={!user.is_active}
+                        class:disable-btn={user.is_active}
+                      >
+                        {user.is_active ? t('ui.disable') : t('ui.enable')}
+                      </button>
+                    </form>
+                  {:else}
+                    <form method="POST" action="?/resendInvitation">
+                      <input type="hidden" name="id_user" value={user.id_user} />
+                      <button type="submit" class="enable-btn">{t('ui.resendInvitation')}</button>
+                    </form>
+                  {/if}
                 </td>
               </tr>
             {/each}
@@ -211,7 +256,7 @@
       </footer>
     {:else}
       <section class="empty-state">
-        <div>📭</div>
+        <div><Icon name="inbox" size={32} /></div>
         <h2>{emptyMessage || t('ui.noData')}</h2>
         <p>{t('ui.noRecordsMatch')}</p>
       </section>
@@ -311,6 +356,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
     gap: 1rem;
     padding: 1rem;
     border-bottom: 1px solid var(--sgpa-border);
@@ -343,6 +389,30 @@
     color: var(--sgpa-blue-dark);
     font-size: 0.95rem;
     font-weight: 750;
+  }
+
+  .status-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+  }
+
+  .status-filter label {
+    color: var(--sgpa-blue-dark);
+    font-weight: 850;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .status-filter select {
+    min-height: 42px;
+    border: 1px solid var(--sgpa-border);
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem;
+    background: var(--sgpa-surface);
+    color: var(--sgpa-text);
+    outline: none;
   }
 
   .records-pill {
@@ -447,6 +517,12 @@
     color: #991b1b;
     background: #fee2e2;
     border-color: #fecaca;
+  }
+
+  .status-badge.pending {
+    color: #92400e;
+    background: #fef3c7;
+    border-color: #fde68a;
   }
 
   .action-heading,

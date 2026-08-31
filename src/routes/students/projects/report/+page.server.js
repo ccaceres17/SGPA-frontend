@@ -10,7 +10,7 @@ export async function load({ fetch, locals }) {
       scope: 'all',
       title: 'Student available projects report',
       subtitle:
-        'Report of academic projects available from the student module, including teachers and enrolled students.'
+        'Report of academic projects available from the student module, including professors and enrolled students.'
     });
 
     return { report };

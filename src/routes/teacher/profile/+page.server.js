@@ -11,7 +11,7 @@ export async function load({ fetch, locals }) {
   if (!currentTeacherId) {
     return {
       user: {},
-      error: 'Could not identify the logged-in teacher.'
+      error: 'Could not identify the logged-in professor.'
     };
   }
 

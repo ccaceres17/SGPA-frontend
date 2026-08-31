@@ -12,10 +12,10 @@ export async function load({ fetch, locals }) {
     return { report };
   } catch (error) {
     return {
-      error: error.message || 'Could not generate teachers report.',
+      error: error.message || 'Could not generate professors report.',
       report: {
-        title: 'Teachers report',
-        subtitle: 'Coordinator report of teacher accounts.',
+        title: 'Professors report',
+        subtitle: 'Coordinator report of professor accounts.',
         users: []
       }
     };

@@ -1,5 +1,6 @@
 <script>
   import { t } from '$lib/stores/locale.svelte.js';
+  import { matchesProjectSearch } from './project-search.js';
 
   export let rows = [];
   export let title = '';
@@ -11,20 +12,7 @@
   let currentPage = 1;
   const pageSize = 10;
 
-  function stripHtml(html = '') {
-    return String(html)
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  $: filteredRows = rows.filter((row) => {
-    const term = search.toLowerCase().trim();
-    if (!term) return true;
-
-    const text = stripHtml(row.proyecto_card).toLowerCase();
-    return text.includes(term);
-  });
+  $: filteredRows = rows.filter((row) => matchesProjectSearch(row, search));
 
   $: totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
 

@@ -1,4 +1,6 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
+
   export let stats = [];
 </script>
 
@@ -6,7 +8,7 @@
   {#each stats as stat}
     <article class="stat-card">
       <div class="stat-icon" style="--stat-bg: {stat.bgColor}; --stat-color: {stat.color};">
-        {@html stat.icon}
+        <Icon name={stat.iconName} size={24} />
       </div>
 
       <div class="stat-info">

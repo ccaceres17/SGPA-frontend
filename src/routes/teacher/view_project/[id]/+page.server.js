@@ -13,6 +13,17 @@ import {
 } from '$lib/server/project-helpers.js';
 import { applyStatusUpdate } from '$lib/server/status-update.js';
 import { getLocaleFromCookies } from '$lib/server/locale.js';
+import { getDocumentsForProject, getDocumentTypes, uploadDocument, deleteDocument } from '$lib/server/document-helpers.js';
+import {
+  getProgressForProject,
+  getCommentsForProgressIds,
+  attachCommentsToProgress,
+  createProgress,
+  createComment,
+  deleteComment
+} from '$lib/server/activity-helpers.js';
+
+const MODULE_NAME = 'teacher';
 
 // Cookie name used by a previous implementation that faked a "successful"
 // status update in the browser when the backend actually rejected it. It is
@@ -83,7 +94,7 @@ export async function load({ fetch, params, locals, cookies }) {
       statuses: [],
       teacherStatuses: [],
       isProjectCancelled: false,
-      error: 'Could not identify the logged-in teacher.'
+      error: 'Could not identify the logged-in professor.'
     };
   }
 
@@ -137,9 +148,22 @@ export async function load({ fetch, params, locals, cookies }) {
 
     const isProjectCancelled = isCancelledStatus(project.id_status, statuses);
 
+    const [documents, documentTypes, progressEntries] = await Promise.all([
+      getDocumentsForProject(fetch, MODULE_NAME, projectId).catch(() => []),
+      getDocumentTypes(fetch, MODULE_NAME).catch(() => []),
+      getProgressForProject(fetch, MODULE_NAME, projectId).catch(() => [])
+    ]);
+
+    const comments = await getCommentsForProgressIds(
+      fetch,
+      MODULE_NAME,
+      progressEntries.map((entry) => entry.id_progress)
+    ).catch(() => []);
+
     return {
       projectId,
       project,
+      users,
       currentTeacherId,
       assignedTeacher,
       enrolledStudents,
@@ -149,7 +173,10 @@ export async function load({ fetch, params, locals, cookies }) {
       statusCategory: getStatusCategory(project.id_status, statuses),
       researchGroup: getResearchGroupLabel(project.id_research_group, researchGroups, locale),
       isAssignedToCurrentTeacher,
-      isProjectCancelled
+      isProjectCancelled,
+      documents,
+      documentTypes,
+      activityEntries: attachCommentsToProgress(progressEntries, comments)
     };
   } catch (error) {
     return {
@@ -158,6 +185,9 @@ export async function load({ fetch, params, locals, cookies }) {
       statuses: [],
       teacherStatuses: [],
       isProjectCancelled: false,
+      documents: [],
+      documentTypes: [],
+      activityEntries: [],
       error: error.message || 'Could not load project details.'
     };
   }
@@ -175,7 +205,7 @@ export const actions = {
 
     if (!currentTeacherId) {
       return fail(400, {
-        error: 'Could not identify the logged-in teacher.'
+        error: 'Could not identify the logged-in professor.'
       });
     }
 
@@ -216,7 +246,7 @@ export const actions = {
 
       if (!isAssignedToCurrentTeacher) {
         return fail(403, {
-          error: 'You can only update the status of projects assigned to your teacher profile.'
+          error: 'You can only update the status of projects assigned to your professor profile.'
         });
       }
 
@@ -228,7 +258,7 @@ export const actions = {
 
       if (isCancelledStatus(statusId, statuses)) {
         return fail(403, {
-          error: 'Teachers cannot cancel projects. Only the coordinator can cancel a project.'
+          error: 'Professors cannot cancel projects. Only the coordinator can cancel a project.'
         });
       }
 
@@ -256,5 +286,114 @@ export const actions = {
         error: error.message || 'Could not update project status. Please try again.'
       });
     }
+  },
+
+  addDocument: async ({ request, fetch, params }) => {
+    const projectId = Number(params.id);
+    const formData = await request.formData();
+
+    const idDocumentType = Number(formData.get('id_document_type'));
+    const description = String(formData.get('description') || '').trim();
+    const file = formData.get('file');
+
+    if (!projectId || !idDocumentType) {
+      return fail(400, { documentError: 'All required document fields must be filled in.' });
+    }
+
+    if (!(file instanceof File) || file.size === 0) {
+      return fail(400, { documentError: 'Select a PDF file to upload.' });
+    }
+
+    const uploadData = new FormData();
+    uploadData.set('id_project', String(projectId));
+    uploadData.set('id_document_type', String(idDocumentType));
+    uploadData.set('description', description);
+    uploadData.set('file', file, file.name);
+
+    const result = await applyStatusUpdate(() => uploadDocument(fetch, uploadData));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { documentError: result.message });
+    }
+
+    return { documentSuccess: true, documentMessage: 'Document uploaded successfully.' };
+  },
+
+  deleteDocument: async ({ request, fetch }) => {
+    const formData = await request.formData();
+    const documentId = Number(formData.get('documentId'));
+
+    if (!documentId) {
+      return fail(400, { documentError: 'Invalid document.' });
+    }
+
+    const result = await applyStatusUpdate(() => deleteDocument(fetch, MODULE_NAME, documentId));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { documentError: result.message });
+    }
+
+    return { documentSuccess: true, documentMessage: 'Document link deleted successfully.' };
+  },
+
+  addProgress: async ({ request, fetch, params }) => {
+    const projectId = Number(params.id);
+    const formData = await request.formData();
+
+    const payload = {
+      id_project: projectId,
+      description: String(formData.get('description') || '').trim(),
+      progress_percentage: Number(formData.get('progress_percentage'))
+    };
+
+    if (!projectId || !payload.description || Number.isNaN(payload.progress_percentage)) {
+      return fail(400, { activityError: 'Description and percentage are required.' });
+    }
+
+    const result = await applyStatusUpdate(() => createProgress(fetch, MODULE_NAME, payload));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { activityError: result.message });
+    }
+
+    return { activitySuccess: true, activityMessage: 'Progress update added successfully.' };
+  },
+
+  addComment: async ({ request, fetch }) => {
+    const formData = await request.formData();
+
+    const payload = {
+      id_progress: Number(formData.get('id_progress')),
+      content: String(formData.get('content') || '').trim()
+    };
+
+    if (!payload.id_progress || !payload.content) {
+      return fail(400, { activityError: 'A comment cannot be empty.' });
+    }
+
+    const result = await applyStatusUpdate(() => createComment(fetch, MODULE_NAME, payload));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { activityError: result.message });
+    }
+
+    return { activitySuccess: true, activityMessage: 'Comment added successfully.' };
+  },
+
+  deleteComment: async ({ request, fetch }) => {
+    const formData = await request.formData();
+    const commentId = Number(formData.get('commentId'));
+
+    if (!commentId) {
+      return fail(400, { activityError: 'Invalid comment.' });
+    }
+
+    const result = await applyStatusUpdate(() => deleteComment(fetch, MODULE_NAME, commentId));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { activityError: result.message });
+    }
+
+    return { activitySuccess: true, activityMessage: 'Comment deleted successfully.' };
   }
 };

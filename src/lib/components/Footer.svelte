@@ -13,9 +13,9 @@
 
     <div class="footer-column">
       <h4>{t('footer.contactHeading')}</h4>
-      <p>58th Street #55-24A Barranquilla, Colombia</p>
-      <p>Email: promocion@ul.edu.co</p>
-      <p>Phone: (+57) 314 8962734</p>
+      <p>{t('footer.address')}</p>
+      <p>{t('footer.emailLabel')}: promocion@ul.edu.co</p>
+      <p>{t('footer.phoneLabel')}: (+57) 314 8962734</p>
     </div>
 
     <div class="footer-column">
@@ -34,7 +34,7 @@
 
   <div class="footer-divider bottom"></div>
 
-  <div class="footer-social" aria-label="Social media and contact links">
+  <div class="footer-social" aria-label={t('footer.socialLinksLabel')}>
     <a
       href="https://wa.me/573148962734"
       aria-label="WhatsApp"

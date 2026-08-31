@@ -1,16 +1,17 @@
 <script>
   import { t } from '$lib/stores/locale.svelte.js';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   /** @type {'active'|'pending'|'completed'|'cancelled'|'other'} */
   export let category = 'other';
   export let label = '';
 
   const ICON_BY_CATEGORY = {
-    active: '●',
-    pending: '◐',
-    completed: '✓',
-    cancelled: '✕',
-    other: '○'
+    active: 'check-circle',
+    pending: 'clock',
+    completed: 'check',
+    cancelled: 'x-circle',
+    other: 'circle'
   };
 
   $: icon = ICON_BY_CATEGORY[category] || ICON_BY_CATEGORY.other;
@@ -18,7 +19,7 @@
 </script>
 
 <span class="status-badge" data-category={category}>
-  <span class="status-badge-icon" aria-hidden="true">{icon}</span>
+  <span class="status-badge-icon" aria-hidden="true"><Icon name={icon} size={13} strokeWidth={2.5} /></span>
   {displayLabel}
 </span>
 
@@ -37,7 +38,7 @@
   }
 
   .status-badge-icon {
-    font-size: 0.7rem;
+    display: inline-flex;
     line-height: 1;
   }
 

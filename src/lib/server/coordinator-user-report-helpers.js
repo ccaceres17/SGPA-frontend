@@ -1,4 +1,5 @@
 import { API_BASE_URL, getAuthHeaders } from '$lib/components/Tokens.js';
+import { formatBackendDetail } from './error-format.js';
 
 const FALLBACK_ROLE_IDS = {
   student: 1,
@@ -9,13 +10,13 @@ const FALLBACK_ROLE_IDS = {
 const REPORT_CONFIG = {
   teachers: {
     targetRole: 'teacher',
-    title: 'Teachers report',
+    title: 'Professors report',
     subtitle:
-      'Coordinator report of teacher accounts, account status, and assigned academic projects.',
-    emptyMessage: 'No teachers found.',
+      'Coordinator report of professor accounts, account status, and assigned academic projects.',
+    emptyMessage: 'No professors found.',
     projectRelationLabel: 'Assigned projects',
-    singularLabel: 'Teacher',
-    pluralLabel: 'Teachers',
+    singularLabel: 'Professor',
+    pluralLabel: 'Professors',
     extraColumnLabel: 'Role'
   },
   students: {
@@ -81,10 +82,7 @@ async function requestJson(fetch, path) {
   const data = parseJsonSafe(text);
 
   if (!response.ok) {
-    const detail =
-      typeof data === 'string'
-        ? data
-        : data?.detail || data?.message || data?.error || JSON.stringify(data ?? '');
+    const detail = typeof data === 'string' ? data : formatBackendDetail(data);
 
     throw new Error(`Could not load ${path}. Status ${response.status}. ${detail}`);
   }
@@ -308,7 +306,7 @@ function getCurrentUserLabel(locals) {
 
   const cleanRole = String(role)
     .replace('coordinator', 'Coordinator')
-    .replace('teacher', 'Teacher')
+    .replace('teacher', 'Professor')
     .replace('students', 'Student')
     .replace('student', 'Student');
 
@@ -428,7 +426,7 @@ function buildUsersReportRows({
             ? studentAcademicData?.semester
               ? `Semester ${studentAcademicData.semester}`
               : 'Not registered'
-            : 'Teacher',
+            : 'Professor',
         relatedProjects,
         totalProjects: relatedProjects.length
       };

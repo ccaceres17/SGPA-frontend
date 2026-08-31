@@ -36,7 +36,7 @@ function getGeneratedBy(locals, fallbackRole = 'User') {
 
   const cleanRole = String(role)
     .replace('students', 'Student')
-    .replace('teacher', 'Teacher')
+    .replace('teacher', 'Professor')
     .replace('coordinator', 'Coordinator');
 
   return `${firstName} - ${cleanRole}`;

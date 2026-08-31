@@ -1,16 +1,17 @@
 <script>
   import { page } from '$app/stores';
   import { t } from '$lib/stores/locale.svelte.js';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   let isOpen = $state(false);
 
   const workspaceItems = [
-    { nameKey: 'sidebar.mainPanel', href: '/students' },
-    { nameKey: 'sidebar.availableProjects', href: '/students/projects' },
-    { nameKey: 'sidebar.myProjects', href: '/students/myprojects' }
+    { nameKey: 'sidebar.mainPanel', href: '/students', icon: 'list' },
+    { nameKey: 'sidebar.availableProjects', href: '/students/projects', icon: 'search' },
+    { nameKey: 'sidebar.myProjects', href: '/students/myprojects', icon: 'folder' }
   ];
 
-  const accountItems = [{ nameKey: 'sidebar.profile', href: '/students/profile' }];
+  const accountItems = [{ nameKey: 'sidebar.profile', href: '/students/profile', icon: 'user' }];
 
   function toggleMenu() {
     isOpen = !isOpen;
@@ -32,7 +33,7 @@
   class="menu-toggle"
   class:open={isOpen}
   type="button"
-  aria-label={isOpen ? 'Close side menu' : 'Open side menu'}
+  aria-label={isOpen ? t('nav.closeMenu') : t('nav.openMenu')}
   aria-expanded={isOpen}
   onclick={toggleMenu}
 >
@@ -44,7 +45,7 @@
 </button>
 
 {#if isOpen}
-  <button class="overlay" type="button" aria-label="Close side menu" onclick={closeMenu}></button>
+  <button class="overlay" type="button" aria-label={t('nav.closeMenu')} onclick={closeMenu}></button>
 {/if}
 
 <aside class="sidebar" class:open={isOpen}>
@@ -57,7 +58,7 @@
     </div>
   </div>
 
-  <nav class="menu" aria-label="Student menu">
+  <nav class="menu" aria-label={t('sidebar.studentModuleLabel')}>
     <span class="menu-section-label">{t('sidebar.workspaceSection')}</span>
 
     {#each workspaceItems as item}
@@ -67,7 +68,7 @@
         aria-current={isActive(item.href) ? 'page' : undefined}
         onclick={closeMenu}
       >
-        <span class="dot"></span>
+        <Icon name={item.icon} size={18} class="menu-icon" />
         <span>{t(item.nameKey)}</span>
       </a>
     {/each}
@@ -81,7 +82,7 @@
         aria-current={isActive(item.href) ? 'page' : undefined}
         onclick={closeMenu}
       >
-        <span class="dot"></span>
+        <Icon name={item.icon} size={18} class="menu-icon" />
         <span>{t(item.nameKey)}</span>
       </a>
     {/each}
@@ -250,18 +251,8 @@
     box-shadow: inset 5px 0 0 var(--sgpa-yellow);
   }
 
-  .dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 999px;
-    background: var(--sgpa-border-strong);
+  :global(.menu-icon) {
     flex: 0 0 auto;
-  }
-
-  .menu a.active .dot,
-  .menu a:hover .dot {
-    background: var(--sgpa-yellow);
-    box-shadow: 0 0 0 5px rgba(242, 183, 5, 0.18);
   }
 
   .overlay {

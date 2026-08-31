@@ -1,12 +1,22 @@
 import { API_BASE_URL, getAuthHeaders } from '$lib/components/Tokens.js';
 import { messages } from '$lib/i18n/messages.js';
 import { translate } from '$lib/i18n/locale.js';
+import { formatBackendDetail } from './error-format.js';
 
 export const ROLE_IDS = {
   student: 1,
   coordinator: 4,
   teacher: 3
 };
+
+/**
+ * Server-rendered project-card folder icon. Consumed via {@html} in
+ * ProjectCardDatatable.svelte, so it can't be a Svelte <Icon> component —
+ * this is the same "folder" path data as src/lib/components/icons/paths.js;
+ * keep the two in sync if that icon's geometry ever changes.
+ */
+export const PROJECT_CARD_ICON_SVG =
+  '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5a1.5 1.5 0 0 1 1.5-1.5h4.5l2 2.5h8.5A1.5 1.5 0 0 1 21 9v8.5A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>';
 
 const PROJECT_USER_CANDIDATES = [
   'project-users',
@@ -105,10 +115,7 @@ export async function requestJson(fetch, path, moduleName = 'coordinator', optio
   const data = safeJson(text);
 
   if (!response.ok) {
-    const detail =
-      typeof data === 'string'
-        ? data
-        : data?.detail || data?.message || data?.error || JSON.stringify(data ?? '');
+    const detail = typeof data === 'string' ? data : formatBackendDetail(data);
 
     const error = new Error(`Could not query ${path}. Status ${response.status}. ${detail}`);
     error.status = response.status;
@@ -180,6 +187,8 @@ export function normalizeUser(user) {
       id_role: user[6] ?? user[5] ?? null,
       is_active: normalizeActiveStatus(user[7] ?? user[6] ?? false),
       created_at: user[8] ?? null,
+      claim_expires_at: user[10] ?? null,
+      claimed_at: user[11] ?? null,
       raw: user
     };
   }
@@ -195,6 +204,8 @@ export function normalizeUser(user) {
     id_role: user?.id_role ?? user?.role_id ?? null,
     is_active: normalizeActiveStatus(user?.is_active),
     created_at: user?.created_at ?? null,
+    claim_expires_at: user?.claim_expires_at ?? null,
+    claimed_at: user?.claimed_at ?? null,
     raw: user
   };
 }
@@ -357,6 +368,27 @@ export function summarizeProjectsByStatus(projects = [], statuses = []) {
   return counts;
 }
 
+/**
+ * Derives a 4-state account-lifecycle status from is_active/claimed_at/
+ * claim_expires_at, without any new stored enum: claimed_at IS NOT NULL
+ * means the account was claimed (then 'active'/'disabled' per is_active,
+ * preserving the pre-existing coordinator enable/disable toggle exactly as
+ * it worked before this account-lifecycle feature existed); claimed_at
+ * IS NULL means still invited ('pending' if the token hasn't expired yet,
+ * 'expired' if it has).
+ */
+export function getUserLifecycleStatus(user) {
+  if (user?.claimed_at) {
+    return user.is_active ? 'active' : 'disabled';
+  }
+
+  if (user?.claim_expires_at && new Date(user.claim_expires_at) < new Date()) {
+    return 'expired';
+  }
+
+  return 'pending';
+}
+
 export function getUserFullName(user) {
   const fullName = `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim();
   return fullName || user?.email || 'Unnamed user';
@@ -450,6 +482,31 @@ export async function assignUserToProject(fetch, moduleName, payload) {
     try {
       return await requestJson(fetch, url, moduleToTry, {
         method: 'POST',
+        body: JSON.stringify(payload)
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError;
+}
+
+export async function reassignProjectUser(fetch, moduleName, idProjectUser, payload) {
+  const baseUrl = await resolveProjectUserEndpoint(fetch, moduleName);
+  const url = `${baseUrl}/${idProjectUser}`;
+  const modulesToTry = [moduleName];
+
+  if (moduleName !== 'coordinator') {
+    modulesToTry.push('coordinator');
+  }
+
+  let lastError;
+
+  for (const moduleToTry of modulesToTry) {
+    try {
+      return await requestJson(fetch, url, moduleToTry, {
+        method: 'PUT',
         body: JSON.stringify(payload)
       });
     } catch (error) {
@@ -620,9 +677,14 @@ export async function assignTeacherToProject(fetch, projectId, teacherId) {
       return { alreadyAssigned: true };
     }
 
-    throw new Error(
-      'This project already has a teacher assigned. Replacing an already-assigned teacher is not currently supported.'
-    );
+    await reassignProjectUser(fetch, 'coordinator', currentRelation.id_project_user, {
+      id_project: Number(projectId),
+      id_user: Number(teacherId),
+      id_role: ROLE_IDS.teacher,
+      assigned_date: currentRelation.assigned_date || getTodayDate()
+    });
+
+    return { reassigned: true };
   }
 
   return assignUserToProject(fetch, 'coordinator', {
@@ -669,7 +731,7 @@ export function buildProjectCardHtml({
   return `
     <div class="project-card">
       <div class="project-card__left">
-        <div class="project-card__icon">📁</div>
+        <div class="project-card__icon">${PROJECT_CARD_ICON_SVG}</div>
 
         <div class="project-card__content">
           <h3>${projectName}</h3>

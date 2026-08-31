@@ -2,7 +2,19 @@
   import { base } from '$app/paths';
   import Header from '$lib/components/Header.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import Carousel from '$lib/components/Carousel.svelte';
+  import Icon from '$lib/components/icons/Icon.svelte';
   import { t } from '$lib/stores/locale.svelte.js';
+
+  const FEATURE_ICONS = ['folder', 'users', 'list', 'book-open'];
+  const ROLE_ICONS = ['graduation-cap', 'user-circle', 'users'];
+
+  $: heroSlides = [
+    { src: `${base}/images/login-banner.webp`, alt: t('home.hero.carouselAltLogo') },
+    { src: `${base}/images/coordinador.png`, alt: t('home.hero.carouselAltCoordinator') },
+    { src: `${base}/images/docentes.png`, alt: t('home.hero.carouselAltTeachers') },
+    { src: `${base}/images/equipo-academico.png`, alt: t('home.hero.carouselAltTeam') }
+  ];
 </script>
 
 <svelte:head>
@@ -18,14 +30,20 @@
 
   <main id="inicio">
     <section class="hero">
-      <div class="hero-inner">
-        <span class="eyebrow">{t('home.hero.eyebrow')}</span>
-        <h2>{t('home.hero.title')}</h2>
-        <p>{t('home.hero.description')}</p>
+      <div class="hero-grid">
+        <div class="hero-inner">
+          <span class="eyebrow">{t('home.hero.eyebrow')}</span>
+          <h2>{t('home.hero.title')}</h2>
+          <p>{t('home.hero.description')}</p>
 
-        <div class="hero-actions">
-          <a href="{base}/login" class="primary-btn">{t('home.hero.primaryCta')}</a>
-          <a href="#funcionamiento" class="secondary-btn">{t('home.hero.secondaryCta')}</a>
+          <div class="hero-actions">
+            <a href="{base}/login" class="primary-btn">{t('home.hero.primaryCta')}</a>
+            <a href="#funcionamiento" class="secondary-btn">{t('home.hero.secondaryCta')}</a>
+          </div>
+        </div>
+
+        <div class="hero-carousel">
+          <Carousel slides={heroSlides} />
         </div>
       </div>
     </section>
@@ -38,11 +56,15 @@
       </div>
 
       <div class="features-grid">
-        {#each t('home.features.items') as item}
-          <article class="feature-card">
+        {#each t('home.features.items') as item, index}
+          <a href="{base}/login" class="feature-card">
+            <div class="card-icon">
+              <Icon name={FEATURE_ICONS[index] || 'folder'} size={22} />
+            </div>
             <h4>{item.title}</h4>
             <p>{item.text}</p>
-          </article>
+            <span class="card-arrow"><Icon name="arrow-right" size={16} /></span>
+          </a>
         {/each}
       </div>
     </section>
@@ -55,11 +77,15 @@
       </div>
 
       <div class="roles-grid">
-        {#each t('home.roles.items') as item}
-          <article class="role-card">
+        {#each t('home.roles.items') as item, index}
+          <a href="{base}/login" class="role-card">
+            <div class="card-icon">
+              <Icon name={ROLE_ICONS[index] || 'user'} size={22} />
+            </div>
             <h4>{item.title}</h4>
             <p>{item.text}</p>
-          </article>
+            <span class="card-arrow"><Icon name="arrow-right" size={16} /></span>
+          </a>
         {/each}
       </div>
     </section>
@@ -85,10 +111,24 @@
     border-bottom: 1px solid var(--sgpa-border);
   }
 
-  .hero-inner {
-    max-width: 760px;
+  .hero-grid {
+    max-width: 1180px;
     margin: 0 auto;
-    text-align: center;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .hero-inner {
+    text-align: left;
+    min-width: 0;
+  }
+
+  .hero-carousel {
+    order: 2;
+    width: 100%;
+    min-width: 0;
   }
 
   .eyebrow,
@@ -107,11 +147,6 @@
     letter-spacing: 0.06em;
   }
 
-  .hero-inner .eyebrow {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
   .hero-inner h2 {
     margin: 0 0 16px;
     font-size: clamp(1.9rem, 3.4vw, 2.75rem);
@@ -122,16 +157,16 @@
   }
 
   .hero-inner p {
-    margin: 0 auto;
+    margin: 0;
     font-size: 1.05rem;
     line-height: 1.7;
     color: var(--sgpa-text-soft);
-    max-width: 620px;
+    max-width: 560px;
   }
 
   .hero-actions {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 14px;
     flex-wrap: wrap;
     margin-top: 26px;
@@ -190,10 +225,36 @@
 
   .feature-card,
   .role-card {
+    position: relative;
+    display: block;
     background: var(--sgpa-surface);
     border-radius: 18px;
     padding: 24px;
     border: 1px solid var(--sgpa-border);
+    text-decoration: none;
+    transition:
+      transform 0.22s ease,
+      box-shadow 0.22s ease,
+      border-color 0.22s ease;
+  }
+
+  .feature-card:hover,
+  .role-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sgpa-shadow-md);
+    border-color: rgba(11, 45, 105, 0.18);
+  }
+
+  .card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+    background: var(--sgpa-blue-soft);
+    color: var(--sgpa-blue);
   }
 
   .feature-card h4,
@@ -212,6 +273,12 @@
     font-size: 0.95rem;
   }
 
+  .card-arrow {
+    display: inline-flex;
+    margin-top: 14px;
+    color: var(--sgpa-blue);
+  }
+
   .final-cta {
     max-width: 760px;
     margin: 0 auto;
@@ -227,6 +294,27 @@
   }
 
   @media (max-width: 960px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-inner {
+      text-align: center;
+    }
+
+    .hero-inner p {
+      margin: 0 auto;
+    }
+
+    .hero-actions {
+      justify-content: center;
+    }
+
+    .hero-carousel {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
     .features-grid {
       grid-template-columns: repeat(2, 1fr);
     }

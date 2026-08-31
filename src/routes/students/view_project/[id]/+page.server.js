@@ -6,6 +6,16 @@ import {
 } from '$lib/server/project-helpers.js';
 import { applyStatusUpdate } from '$lib/server/status-update.js';
 import { getLocaleFromCookies } from '$lib/server/locale.js';
+import { getDocumentsForProject, getDocumentTypes, uploadDocument, deleteDocument } from '$lib/server/document-helpers.js';
+import {
+  getProgressForProject,
+  getCommentsForProgressIds,
+  attachCommentsToProgress,
+  createComment,
+  deleteComment
+} from '$lib/server/activity-helpers.js';
+
+const MODULE_NAME = 'students';
 
 function getCurrentStudentId(locals) {
   return Number(locals?.session?.user?.id_user || 0);
@@ -37,7 +47,7 @@ export async function load({ fetch, params, url, locals, cookies }) {
 
   try {
     const locale = getLocaleFromCookies(cookies);
-    const details = await getProjectDetails(fetch, 'students', projectId, locale);
+    const details = await getProjectDetails(fetch, MODULE_NAME, projectId, locale);
 
     const isEnrolled = details.relations.some(
       (relation) =>
@@ -46,18 +56,36 @@ export async function load({ fetch, params, url, locals, cookies }) {
         Number(relation.id_role) === ROLE_IDS.student
     );
 
+    const [documents, documentTypes, progressEntries] = await Promise.all([
+      getDocumentsForProject(fetch, MODULE_NAME, projectId).catch(() => []),
+      getDocumentTypes(fetch, MODULE_NAME).catch(() => []),
+      getProgressForProject(fetch, MODULE_NAME, projectId).catch(() => [])
+    ]);
+
+    const comments = await getCommentsForProgressIds(
+      fetch,
+      MODULE_NAME,
+      progressEntries.map((entry) => entry.id_progress)
+    ).catch(() => []);
+
     return {
       ...details,
       projectId,
       source,
       currentStudentId,
-      isEnrolled
+      isEnrolled,
+      documents,
+      documentTypes,
+      activityEntries: attachCommentsToProgress(progressEntries, comments)
     };
   } catch (error) {
     return {
       projectId,
       source,
       currentStudentId,
+      documents: [],
+      documentTypes: [],
+      activityEntries: [],
       error: error.message || 'Could not load project details.'
     };
   }
@@ -95,9 +123,93 @@ export const actions = {
 
     return {
       success: true,
-      message: enrollResult?.alreadyExists
-        ? 'You were already enrolled in this project.'
-        : 'Enrollment completed successfully.'
+      messageKey: enrollResult?.alreadyExists ? 'alreadyEnrolledMessage' : 'enrollmentCompletedSuccess'
     };
+  },
+
+  addDocument: async ({ request, fetch, params }) => {
+    const projectId = Number(params.id);
+    const formData = await request.formData();
+
+    const idDocumentType = Number(formData.get('id_document_type'));
+    const description = String(formData.get('description') || '').trim();
+    const file = formData.get('file');
+
+    if (!projectId || !idDocumentType) {
+      return fail(400, { documentError: 'All required document fields must be filled in.' });
+    }
+
+    if (!(file instanceof File) || file.size === 0) {
+      return fail(400, { documentError: 'Select a PDF file to upload.' });
+    }
+
+    const uploadData = new FormData();
+    uploadData.set('id_project', String(projectId));
+    uploadData.set('id_document_type', String(idDocumentType));
+    uploadData.set('description', description);
+    uploadData.set('file', file, file.name);
+
+    const result = await applyStatusUpdate(() => uploadDocument(fetch, uploadData));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { documentError: result.message });
+    }
+
+    return { documentSuccess: true, documentMessage: 'Document uploaded successfully.' };
+  },
+
+  deleteDocument: async ({ request, fetch }) => {
+    const formData = await request.formData();
+    const documentId = Number(formData.get('documentId'));
+
+    if (!documentId) {
+      return fail(400, { documentError: 'Invalid document.' });
+    }
+
+    const result = await applyStatusUpdate(() => deleteDocument(fetch, MODULE_NAME, documentId));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { documentError: result.message });
+    }
+
+    return { documentSuccess: true, documentMessage: 'Document link deleted successfully.' };
+  },
+
+  addComment: async ({ request, fetch }) => {
+    const formData = await request.formData();
+
+    const payload = {
+      id_progress: Number(formData.get('id_progress')),
+      content: String(formData.get('content') || '').trim()
+    };
+
+    if (!payload.id_progress || !payload.content) {
+      return fail(400, { activityError: 'A comment cannot be empty.' });
+    }
+
+    const result = await applyStatusUpdate(() => createComment(fetch, MODULE_NAME, payload));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { activityError: result.message });
+    }
+
+    return { activitySuccess: true, activityMessage: 'Comment added successfully.' };
+  },
+
+  deleteComment: async ({ request, fetch }) => {
+    const formData = await request.formData();
+    const commentId = Number(formData.get('commentId'));
+
+    if (!commentId) {
+      return fail(400, { activityError: 'Invalid comment.' });
+    }
+
+    const result = await applyStatusUpdate(() => deleteComment(fetch, MODULE_NAME, commentId));
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { activityError: result.message });
+    }
+
+    return { activitySuccess: true, activityMessage: 'Comment deleted successfully.' };
   }
 };

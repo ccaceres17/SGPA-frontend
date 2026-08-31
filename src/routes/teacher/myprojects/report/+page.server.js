@@ -8,9 +8,9 @@ export async function load({ fetch, locals }) {
       locals,
       moduleName: 'teacher',
       scope: 'teacher_mine',
-      title: 'Teacher assigned projects report',
+      title: 'Professor assigned projects report',
       subtitle:
-        'Report of academic projects assigned to the logged-in teacher profile.'
+        'Report of academic projects assigned to the logged-in professor profile.'
     });
 
     return { report };
@@ -18,7 +18,7 @@ export async function load({ fetch, locals }) {
     return {
       error: error.message || 'Could not generate assigned projects report.',
       report: {
-        title: 'Teacher assigned projects report',
+        title: 'Professor assigned projects report',
         subtitle: 'Report of assigned academic projects.',
         projects: []
       }

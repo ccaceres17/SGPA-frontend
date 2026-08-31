@@ -1,5 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import { API_BASE_URL, getAuthHeaders } from '$lib/components/Tokens.js';
+import { formatBackendDetail } from '$lib/server/error-format.js';
 
 const USERS_ENDPOINT = `${API_BASE_URL}/users`;
 
@@ -17,20 +18,20 @@ export const actions = {
 		const last_name = formData.get('last_name')?.toString().trim() || '';
 		const email = formData.get('email')?.toString().trim() || '';
 		const phone = formData.get('phone')?.toString().trim() || '';
-		const password = formData.get('password')?.toString().trim() || '';
 		const id_role = Number(formData.get('id_role'));
-		const is_active = formData.get('is_active') === 'on';
 
 		const values = {
 			first_name,
 			last_name,
 			email,
 			phone,
-			id_role,
-			is_active
+			id_role
 		};
 
-		if (!first_name || !last_name || !email || !phone || !password || !id_role) {
+		// The coordinator no longer sets a password: new accounts start
+		// INVITED and the user sets their own password via the claim-account
+		// flow after receiving the invitation email.
+		if (!first_name || !last_name || !email || !phone || !id_role) {
 			return fail(400, {
 				success: false,
 				error: 'All fields are required.',
@@ -41,7 +42,7 @@ export const actions = {
 		if (![1, 3].includes(id_role)) {
 			return fail(400, {
 				success: false,
-				error: 'The selected role is not valid. Only Student or Teacher is allowed.',
+				error: 'The selected role is not valid. Only Student or Professor is allowed.',
 				values
 			});
 		}
@@ -50,10 +51,8 @@ export const actions = {
 			first_name,
 			last_name,
 			email,
-			password_hash: password,
 			phone,
-			id_role,
-			is_active
+			id_role
 		};
 
 		try {
@@ -84,19 +83,14 @@ export const actions = {
 			if (!response.ok) {
 				return fail(400, {
 					success: false,
-					error:
-						result?.message ||
-						result?.error ||
-						result?.detail ||
-						result?.raw ||
-						`La API devolvió error ${response.status}.`,
+					error: formatBackendDetail(result),
 					values
 				});
 			}
 
 			return {
 				success: true,
-				message: 'User created successfully.',
+				emailDelivered: Boolean(result?.email_delivered),
 				createdUser: result
 			};
 		} catch (error) {

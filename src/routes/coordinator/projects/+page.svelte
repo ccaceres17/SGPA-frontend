@@ -1,6 +1,6 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import Header from '$lib/components/Header_St.svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import DashboardStats from '$lib/components/Projects.svelte';
   import SideBar from '$lib/components/CoordinatorSideBar.svelte';
   import ProjectCardsDataTable from '$lib/components/ProjectCardDatatable.svelte';
@@ -10,19 +10,53 @@
 
   $: rows = data?.rows || [];
   $: error = data?.error;
+  $: statuses = data?.statuses || [];
+  $: teachers = data?.teachers || [];
+  $: students = data?.students || [];
+  $: researchGroups = data?.researchGroups || [];
+
+  let statusFilter = '';
+  let teacherFilter = '';
+  let studentFilter = '';
+  let researchGroupFilter = '';
+  let startDateFilter = '';
+  let endDateFilter = '';
+
+  function fullName(user) {
+    return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Unnamed user';
+  }
+
+  $: filteredRows = rows.filter((row) => {
+    if (statusFilter && Number(row.id_status) !== Number(statusFilter)) return false;
+    if (teacherFilter && Number(row.id_teacher) !== Number(teacherFilter)) return false;
+    if (studentFilter && !row.studentIds.includes(Number(studentFilter))) return false;
+    if (researchGroupFilter && Number(row.id_research_group) !== Number(researchGroupFilter)) return false;
+    if (startDateFilter && (!row.start_date || row.start_date < startDateFilter)) return false;
+    if (endDateFilter && (!row.end_date || row.end_date > endDateFilter)) return false;
+    return true;
+  });
+
+  function clearFilters() {
+    statusFilter = '';
+    teacherFilter = '';
+    studentFilter = '';
+    researchGroupFilter = '';
+    startDateFilter = '';
+    endDateFilter = '';
+  }
 
   $: stats = [
     {
       label: t('pages.coordinatorProjects.totalProjects'),
       value: data?.totalProjects || 0,
-      icon: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
+      iconName: 'folder',
       bgColor: 'var(--sgpa-blue-soft)',
       color: 'var(--sgpa-blue)'
     },
     {
       label: t('pages.coordinatorProjects.visibleRecords'),
-      value: rows.length,
-      icon: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>`,
+      value: filteredRows.length,
+      iconName: 'list',
       bgColor: 'var(--sgpa-yellow-soft)',
       color: 'var(--sgpa-warning)'
     }
@@ -53,7 +87,7 @@
     </header>
 
     {#if error}
-      <div class="error-msg">⚠️ {error}</div>
+      <div class="error-msg"><Icon name="alert-triangle" size={16} /> {error}</div>
     {/if}
 
     <DashboardStats {stats} />
@@ -66,11 +100,67 @@
           <p>{t('pages.coordinatorProjects.description')}</p>
         </div>
 
-        <span class="badge">{rows.length} {t('ui.records')}</span>
+        <span class="badge">{filteredRows.length} {t('ui.records')}</span>
+      </div>
+
+      <div class="filters-bar">
+        <div class="filter-field">
+          <label for="filter-status">{t('ui.filterByStatus')}</label>
+          <select id="filter-status" bind:value={statusFilter}>
+            <option value="">{t('ui.allStatuses')}</option>
+            {#each statuses as status}
+              <option value={status.id_status}>{status.status_name}</option>
+            {/each}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="filter-teacher">{t('ui.filterByTeacher')}</label>
+          <select id="filter-teacher" bind:value={teacherFilter}>
+            <option value="">{t('ui.allTeachers')}</option>
+            {#each teachers as teacher}
+              <option value={teacher.id_user}>{fullName(teacher)}</option>
+            {/each}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="filter-student">{t('ui.filterByStudent')}</label>
+          <select id="filter-student" bind:value={studentFilter}>
+            <option value="">{t('ui.allStudents')}</option>
+            {#each students as student}
+              <option value={student.id_user}>{fullName(student)}</option>
+            {/each}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="filter-research-group">{t('ui.filterByResearchGroup')}</label>
+          <select id="filter-research-group" bind:value={researchGroupFilter}>
+            <option value="">{t('ui.allResearchGroups')}</option>
+            {#each researchGroups as group}
+              <option value={group.id_research_group}>{group.research_group_name}</option>
+            {/each}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="filter-start-date">{t('ui.filterStartDate')}</label>
+          <input id="filter-start-date" type="date" bind:value={startDateFilter} />
+        </div>
+
+        <div class="filter-field">
+          <label for="filter-end-date">{t('ui.filterEndDate')}</label>
+          <input id="filter-end-date" type="date" bind:value={endDateFilter} />
+        </div>
+
+        <button type="button" class="clear-filters-btn" onclick={clearFilters}>
+          {t('ui.clearFilters')}
+        </button>
       </div>
 
       <ProjectCardsDataTable
-        {rows}
+        rows={filteredRows}
         title={t('sidebar.projects')}
         badgeColor="#0d468d"
         emptyMessage={t('pages.coordinatorProjects.emptyMessage')}
@@ -79,8 +169,6 @@
     </section>
   </div>
 </main>
-
-<Footer />
 
 <style>
   main {
@@ -226,6 +314,68 @@
 
   .list-section {
     margin-top: 1.25rem;
+  }
+
+  .filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.9rem;
+    padding: 1rem 1.15rem;
+    margin-bottom: 1rem;
+    border-radius: 20px;
+    background: var(--sgpa-surface);
+    border: 1px solid var(--sgpa-border);
+    box-shadow: var(--sgpa-shadow-sm);
+  }
+
+  .filter-field {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 160px;
+  }
+
+  .filter-field label {
+    color: var(--sgpa-blue-dark);
+    font-weight: 850;
+    font-size: 0.82rem;
+  }
+
+  .filter-field select,
+  .filter-field input {
+    min-height: 42px;
+    border: 1px solid var(--sgpa-border);
+    border-radius: 12px;
+    padding: 0.55rem 0.7rem;
+    background: var(--sgpa-surface);
+    color: var(--sgpa-text);
+    outline: none;
+  }
+
+  .clear-filters-btn {
+    min-height: 42px;
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--sgpa-border);
+    background: var(--sgpa-surface-soft);
+    color: var(--sgpa-blue);
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .clear-filters-btn:hover {
+    background: var(--sgpa-blue-soft);
+  }
+
+  @media (max-width: 760px) {
+    .filters-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-field {
+      min-width: 0;
+    }
   }
 
   .section-title {

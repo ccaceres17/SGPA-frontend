@@ -1,6 +1,8 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import { t } from '$lib/stores/locale.svelte.js';
   import StatusBadge from '$lib/components/StatusBadge.svelte';
+  import StatCards from '$lib/components/Projects.svelte';
 
   let {
     eyebrow = 'Main panel',
@@ -11,6 +13,41 @@
     recentProjects = [],
     error = ''
   } = $props();
+
+  let statCards = $derived([
+    {
+      label: t('dashboard.stats.activeProjects'),
+      value: stats.active,
+      iconName: 'check-circle',
+      bgColor: 'var(--sgpa-success-bg)',
+      color: 'var(--sgpa-success)'
+    },
+    {
+      label: t('dashboard.stats.pendingProjects'),
+      value: stats.pending,
+      iconName: 'clock',
+      bgColor: 'var(--sgpa-warning-bg)',
+      color: 'var(--sgpa-warning)'
+    },
+    {
+      label: t('dashboard.stats.completedProjects'),
+      value: stats.completed,
+      iconName: 'check',
+      bgColor: 'var(--sgpa-blue-soft)',
+      color: 'var(--sgpa-blue)'
+    },
+    ...(extraStat
+      ? [
+          {
+            label: t(extraStat.labelKey),
+            value: extraStat.value,
+            iconName: extraStat.iconName || 'folder',
+            bgColor: 'var(--sgpa-yellow-soft)',
+            color: 'var(--sgpa-warning)'
+          }
+        ]
+      : [])
+  ]);
 </script>
 
 <main class="dashboard-page">
@@ -22,35 +59,13 @@
     </header>
 
     {#if error}
-      <div class="error-msg">⚠️ {error}</div>
+      <div class="error-msg"><Icon name="alert-triangle" size={16} /> {error}</div>
     {/if}
 
     <section class="stats-section" aria-label={t('dashboard.stats.heading')}>
       <h2 class="section-heading">{t('dashboard.stats.heading')}</h2>
 
-      <div class="stats-grid">
-        <div class="stat-tile">
-          <strong>{stats.active}</strong>
-          <span>{t('dashboard.stats.activeProjects')}</span>
-        </div>
-
-        <div class="stat-tile">
-          <strong>{stats.pending}</strong>
-          <span>{t('dashboard.stats.pendingProjects')}</span>
-        </div>
-
-        <div class="stat-tile">
-          <strong>{stats.completed}</strong>
-          <span>{t('dashboard.stats.completedProjects')}</span>
-        </div>
-
-        {#if extraStat}
-          <div class="stat-tile">
-            <strong>{extraStat.value}</strong>
-            <span>{t(extraStat.labelKey)}</span>
-          </div>
-        {/if}
-      </div>
+      <StatCards stats={statCards} />
     </section>
 
     <section class="recent-section" aria-label={t('dashboard.recentProjects.heading')}>
@@ -155,34 +170,6 @@
     font-weight: 900;
   }
 
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.9rem;
-  }
-
-  .stat-tile {
-    display: grid;
-    gap: 0.3rem;
-    padding: 1rem;
-    border-radius: 12px;
-    background: var(--sgpa-surface);
-    border: 1px solid var(--sgpa-border);
-  }
-
-  .stat-tile strong {
-    color: var(--sgpa-blue);
-    font-size: 1.75rem;
-    font-weight: 900;
-    line-height: 1;
-  }
-
-  .stat-tile span {
-    color: var(--sgpa-text-soft);
-    font-size: 0.82rem;
-    font-weight: 700;
-  }
-
   .table-wrap {
     background: var(--sgpa-surface);
     border: 1px solid var(--sgpa-border);
@@ -253,12 +240,6 @@
 
   .error-msg {
     padding: 0.9rem 1rem;
-  }
-
-  @media (max-width: 900px) {
-    .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
   }
 
   @media (max-width: 640px) {

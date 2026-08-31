@@ -1,11 +1,13 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import Header from '$lib/components/Header_St.svelte';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/StudentSideBar.svelte';
   import { createConfirmFlow } from '$lib/client/confirmFlow.svelte.js';
   import { t } from '$lib/stores/locale.svelte.js';
   import StatusBadge from '$lib/components/StatusBadge.svelte';
+  import DocumentsPanel from '$lib/components/DocumentsPanel.svelte';
+  import ActivityPanel from '$lib/components/ActivityPanel.svelte';
 
   export let data;
   export let form;
@@ -13,32 +15,44 @@
   const confirm = createConfirmFlow();
 
   function fullName(user) {
-    if (!user) return 'Unassigned';
-    return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Unnamed user';
+    if (!user) return t('reports.unassigned');
+    return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || t('ui.unnamedUser');
   }
 
   function formatDate(value) {
-    if (!value) return 'Not defined';
+    if (!value) return t('reports.notDefined');
     return String(value).split('T')[0];
   }
 
   function confirmEnrollment(event) {
     confirm.request(event, {
-      title: 'Enroll in this project?',
-      message: 'Your user will be registered as a student participant in this academic project.',
-      details: project ? `Project: ${project.project_name || 'Unnamed project'}` : '',
-      confirmText: 'Enroll in project',
+      title: t('pages.projectDetail.enrollConfirmTitle'),
+      message: t('pages.projectDetail.enrollConfirmMessage'),
+      details: project?.project_name || '',
+      confirmText: t('pages.projectDetail.enrollButton'),
       variant: 'success'
     });
   }
 
+  $: projectId = data?.projectId;
   $: project = data?.project;
   $: assignedTeacher = data?.assignedTeacher || null;
   $: enrolledStudents = data?.enrolledStudents || [];
   $: error = form?.error || data?.error || '';
-  $: successMessage = form?.message || '';
+  $: successMessage = form?.messageKey
+    ? t(`pages.projectDetail.${form.messageKey}`)
+    : form?.message || '';
   $: isEnrolled = Boolean(form?.success || data?.isEnrolled);
   $: backHref = data?.source === 'myprojects' ? '/students/myprojects' : '/students/projects';
+  $: documents = data?.documents || [];
+  $: documentTypes = data?.documentTypes || [];
+  $: activityEntries = data?.activityEntries || [];
+  $: users = data?.users || [];
+  $: currentUserId = data?.currentStudentId ?? null;
+  $: documentError = form?.documentError || '';
+  $: documentSuccessMessage = form?.documentSuccess ? form?.documentMessage : '';
+  $: activityError = form?.activityError || '';
+  $: activitySuccessMessage = form?.activitySuccess ? form?.activityMessage : '';
 </script>
 
 <Header />
@@ -56,59 +70,59 @@
 
     <header class="main-header">
       <div>
-        <span class="eyebrow">Student module</span>
-        <h1>Project details</h1>
-        <p>Review the project information and enroll only if you are not already registered.</p>
+        <span class="eyebrow">{t('sidebar.studentModuleLabel')}</span>
+        <h1>{t('pages.projectDetail.headingStudent')}</h1>
+        <p>{t('pages.projectDetail.descriptionStudent')}</p>
       </div>
 
-      <a href={backHref} class="secondary-link">Back</a>
+      <a href={backHref} class="secondary-link">{t('ui.back')}</a>
     </header>
 
     {#if successMessage}
-      <div class="success-box">✅ {successMessage}</div>
+      <div class="success-box"><Icon name="check-circle" size={16} /> {successMessage}</div>
     {/if}
 
     {#if error}
-      <div class="error-msg">⚠️ {error}</div>
+      <div class="error-msg"><Icon name="alert-triangle" size={16} /> {error}</div>
     {/if}
 
     {#if project}
       <div class="detail-layout">
         <section class="project-panel">
           <div class="panel-heading">
-            <div class="project-icon">📁</div>
+            <div class="project-icon"><Icon name="folder" size={26} /></div>
             <div>
-              <span class="eyebrow small">Project information</span>
-              <h2>{project.project_name || 'Unnamed project'}</h2>
+              <span class="eyebrow small">{t('pages.projectDetail.infoHeading')}</span>
+              <h2>{project.project_name || t('reports.unassigned')}</h2>
               <StatusBadge category={data.statusCategory || 'other'} label={data.statusLabel} />
             </div>
           </div>
 
-          <p class="description">{project.description || 'No description available.'}</p>
+          <p class="description">{project.description || t('pages.projectDetail.noDescription')}</p>
 
           <div class="info-grid">
             <div class="info-item">
-              <span>Start date</span>
+              <span>{t('reports.startDate')}</span>
               <strong>{formatDate(project.start_date)}</strong>
             </div>
 
             <div class="info-item">
-              <span>End date</span>
+              <span>{t('reports.endDate')}</span>
               <strong>{formatDate(project.end_date)}</strong>
             </div>
 
             <div class="info-item">
-              <span>Teacher</span>
+              <span>{t('reports.assignedTeacher')}</span>
               <strong>{fullName(assignedTeacher)}</strong>
             </div>
 
             <div class="info-item">
-              <span>Enrolled students</span>
+              <span>{t('pages.projectDetail.enrolledStudentsLabel')}</span>
               <strong>{enrolledStudents.length}</strong>
             </div>
 
             <div class="info-item">
-              <span>Project ID</span>
+              <span>{t('reports.projectId')}</span>
               <strong>{project.id_project}</strong>
             </div>
 
@@ -125,17 +139,21 @@
         </section>
 
         <aside class="actions-panel">
-          <span class="eyebrow small">Student action</span>
-          <h2>{isEnrolled ? 'Already enrolled' : 'Enrollment available'}</h2>
+          <span class="eyebrow small">{t('pages.projectDetail.enrollHeading')}</span>
+          <h2>
+            {isEnrolled
+              ? t('pages.projectDetail.alreadyEnrolledHeading')
+              : t('pages.projectDetail.enrollmentAvailableHeading')}
+          </h2>
 
           {#if isEnrolled}
-            <p>You are already enrolled in this project. You cannot enroll twice.</p>
-            <a href="/students/myprojects" class="secondary-link full-width">Go to my projects</a>
+            <p>{t('pages.projectDetail.alreadyEnrolledBody')}</p>
+            <a href="/students/myprojects" class="secondary-link full-width">{t('pages.projectDetail.goToMyProjects')}</a>
           {:else}
-            <p>You can enroll in this project. Confirm the action before registering your enrollment.</p>
+            <p>{t('pages.projectDetail.enrollmentAvailableBody')}</p>
 
             <form method="POST" action="?/enroll" onsubmit={confirmEnrollment}>
-              <button type="submit" class="primary-btn">Enroll in project</button>
+              <button type="submit" class="primary-btn">{t('pages.projectDetail.enrollButton')}</button>
             </form>
           {/if}
         </aside>
@@ -144,31 +162,33 @@
       <section class="participants-panel">
         <div class="section-title">
           <div>
-            <span class="eyebrow small">Participants</span>
-            <h2>Project team</h2>
+            <span class="eyebrow small">{t('pages.projectDetail.participantsEyebrow')}</span>
+            <h2>{t('pages.projectDetail.projectTeamHeading')}</h2>
           </div>
 
-          <span class="count-badge">{enrolledStudents.length + (assignedTeacher ? 1 : 0)} people</span>
+          <span class="count-badge">
+            {t('pages.projectDetail.peopleCount', { count: enrolledStudents.length + (assignedTeacher ? 1 : 0) })}
+          </span>
         </div>
 
         <div class="participant-block">
-          <h3>Assigned teacher</h3>
+          <h3>{t('reports.assignedTeacher')}</h3>
 
           {#if assignedTeacher}
             <article class="participant-card teacher">
               <div class="avatar">T</div>
               <div>
                 <strong>{fullName(assignedTeacher)}</strong>
-                <span>{assignedTeacher.email || 'No email registered'}</span>
+                <span>{assignedTeacher.email || t('ui.noEmailRegistered')}</span>
               </div>
             </article>
           {:else}
-            <div class="empty-box">No teacher has been assigned yet.</div>
+            <div class="empty-box">{t('pages.projectDetail.noTeacherAssigned')}</div>
           {/if}
         </div>
 
         <div class="participant-block">
-          <h3>Enrolled students</h3>
+          <h3>{t('pages.projectDetail.enrolledStudentsLabel')}</h3>
 
           {#if enrolledStudents.length > 0}
             <div class="students-list">
@@ -177,27 +197,48 @@
                   <div class="avatar">S</div>
                   <div>
                     <strong>{fullName(student)}</strong>
-                    <span>{student.email || 'No email registered'}</span>
+                    <span>{student.email || t('ui.noEmailRegistered')}</span>
                   </div>
                 </article>
               {/each}
             </div>
           {:else}
-            <div class="empty-box">No students enrolled yet.</div>
+            <div class="empty-box">{t('pages.projectDetail.noStudentsEnrolledYet')}</div>
           {/if}
         </div>
       </section>
+
+      <DocumentsPanel
+        {documents}
+        {documentTypes}
+        {users}
+        {currentUserId}
+        isStaff={false}
+        confirm={confirm}
+        error={documentError}
+        successMessage={documentSuccessMessage}
+        downloadHrefFor={(doc) => `/students/view_project/${projectId}/documents/${doc.id_document}/download`}
+      />
+
+      <ActivityPanel
+        progressEntries={activityEntries}
+        {users}
+        {currentUserId}
+        canAddEntry={false}
+        isStaff={false}
+        confirm={confirm}
+        error={activityError}
+        successMessage={activitySuccessMessage}
+      />
     {:else if !error}
       <section class="empty-state">
-        <div>📭</div>
-        <h2>Project not found</h2>
-        <p>The requested project could not be loaded.</p>
+        <div><Icon name="inbox" size={32} /></div>
+        <h2>{t('pages.projectDetail.projectNotFoundHeading')}</h2>
+        <p>{t('pages.projectDetail.projectNotFoundBody')}</p>
       </section>
     {/if}
   </div>
 </main>
-
-<Footer />
 
 <ConfirmModal
   open={confirm.state.open}
@@ -205,7 +246,7 @@
   message={confirm.state.message}
   details={confirm.state.details}
   confirmText={confirm.state.confirmText}
-  cancelText="Cancel"
+  cancelText={t('confirmModal.cancel')}
   variant={confirm.state.variant}
   loading={confirm.state.loading}
   onCancel={confirm.cancel}

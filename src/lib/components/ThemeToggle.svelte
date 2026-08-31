@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { themeState, toggleTheme, syncThemeFromDocument } from '$lib/stores/theme.svelte.js';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   onMount(() => {
     syncThemeFromDocument();
@@ -17,9 +18,5 @@
   aria-pressed={isDark}
   title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
 >
-  {#if isDark}
-    <span aria-hidden="true">☀️</span>
-  {:else}
-    <span aria-hidden="true">🌙</span>
-  {/if}
+  <Icon name={isDark ? 'sun' : 'moon'} size={18} />
 </button>

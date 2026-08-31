@@ -1,5 +1,6 @@
 <script>
   import { t } from '$lib/stores/locale.svelte.js';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   export let user = {};
 
@@ -34,7 +35,7 @@
 
   <div class="info-sections">
     <section class="data-group">
-      <h3><span class="icon">📧</span> {t('pages.profile.contactAndAccess')}</h3>
+      <h3><span class="icon"><Icon name="mail" size={17} /></span> {t('pages.profile.contactAndAccess')}</h3>
 
       <div class="field">
         <span class="label">{t('pages.profile.institutionalEmail')}</span>
@@ -48,7 +49,7 @@
     </section>
 
     <section class="data-group">
-      <h3><span class="icon">🔑</span> {t('pages.profile.identification')}</h3>
+      <h3><span class="icon"><Icon name="key" size={17} /></span> {t('pages.profile.identification')}</h3>
 
       <div class="field">
         <span class="label">{t('pages.profile.accountStatus')}</span>

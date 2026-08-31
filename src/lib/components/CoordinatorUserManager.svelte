@@ -1,5 +1,6 @@
 <script>
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+  import Icon from '$lib/components/icons/Icon.svelte';
   import { t } from '$lib/stores/locale.svelte.js';
 
   export let users = [];
@@ -112,7 +113,7 @@
 
   <section class="toolbar-card">
     <div class="search-wrap">
-      <span>⌕</span>
+      <span><Icon name="search" size={16} /></span>
       <input
         bind:value={search}
         type="search"
@@ -169,7 +170,7 @@
       </div>
     {:else}
       <div class="empty-state">
-        <div>📭</div>
+        <div><Icon name="inbox" size={32} /></div>
         <h2>{emptyMessage || t('ui.noData')}</h2>
         <p>{t('ui.noRecordsMatch')}</p>
       </div>

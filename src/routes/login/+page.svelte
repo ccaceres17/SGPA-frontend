@@ -1,4 +1,5 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import { enhance } from '$app/forms';
   import Header from '$lib/components/Header_L.svelte';
   import Footer from '$lib/components/Footer.svelte';
@@ -60,7 +61,7 @@
 
         {#if form?.error}
           <div class="error-msg">
-            ⚠️ {form.error}
+            <Icon name="alert-triangle" size={16} /> {form.error}
           </div>
         {/if}
 
@@ -80,7 +81,10 @@
           </div>
 
           <div class="input-group-custom">
-            <label for="password">{t('login.passwordLabel')}</label>
+            <div class="password-label-row">
+              <label for="password">{t('login.passwordLabel')}</label>
+              <a href="/forgot-password" class="forgot-password-link">{t('login.forgotPassword')}</a>
+            </div>
             <input
               id="password"
               name="password"
@@ -204,6 +208,25 @@
     margin: 0;
     color: var(--sgpa-blue-dark);
     font-weight: 850;
+  }
+
+  .password-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .forgot-password-link {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--sgpa-link, var(--sgpa-blue));
+    text-decoration: none;
+  }
+
+  .forgot-password-link:hover {
+    text-decoration: underline;
   }
 
   .login-formulary {

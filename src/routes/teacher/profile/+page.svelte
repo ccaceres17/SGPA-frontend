@@ -1,6 +1,6 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import Header from '$lib/components/Header_St.svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/TeacherSideBar.svelte';
   import Profile from '$lib/components/Profile.svelte';
   import { t } from '$lib/stores/locale.svelte.js';
@@ -27,14 +27,12 @@
     </header>
 
     {#if error}
-      <div class="error-msg">⚠️ {error}</div>
+      <div class="error-msg"><Icon name="alert-triangle" size={16} /> {error}</div>
     {:else}
       <Profile {user} />
     {/if}
   </div>
 </main>
-
-<Footer />
 
 <style>
   main {

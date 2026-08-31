@@ -7,5 +7,5 @@
 <CoordinatorUsersReport
   {data}
   backHref="/coordinator/teachers"
-  backLabel="Back to teachers"
+  backLabel="Back to professors"
 />

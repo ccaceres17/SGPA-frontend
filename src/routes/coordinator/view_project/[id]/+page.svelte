@@ -1,11 +1,13 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import Header from '$lib/components/Header_St.svelte';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/CoordinatorSideBar.svelte';
   import { createConfirmFlow } from '$lib/client/confirmFlow.svelte.js';
   import { t } from '$lib/stores/locale.svelte.js';
   import StatusBadge from '$lib/components/StatusBadge.svelte';
+  import DocumentsPanel from '$lib/components/DocumentsPanel.svelte';
+  import ActivityPanel from '$lib/components/ActivityPanel.svelte';
 
   export let data;
   export let form;
@@ -13,27 +15,33 @@
   const confirm = createConfirmFlow();
 
   function fullName(user) {
-    if (!user) return 'Unassigned';
-    return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Unnamed user';
+    if (!user) return t('reports.unassigned');
+    return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || t('ui.unnamedUser');
   }
 
   function formatDate(value) {
-    if (!value) return 'Not defined';
+    if (!value) return t('reports.notDefined');
     return String(value).split('T')[0];
   }
+
+  function formatSlotTime(value) {
+    return String(value || '').slice(0, 5);
+  }
+
+  $: availabilityDays = t('pages.teacherAvailability.days');
 
   function handleStatusSubmit(event) {
     const formElement = event.currentTarget;
     const select = formElement.querySelector('select[name="statusId"]');
-    const selectedStatus = select?.selectedOptions?.[0]?.textContent?.trim() || 'Selected status';
+    const selectedStatus = select?.selectedOptions?.[0]?.textContent?.trim() || t('pages.projectDetail.selectedStatusFallback');
 
     confirm.request(event, {
-      title: 'Update project status?',
-      message: 'This action will update the current status of the academic project.',
+      title: t('pages.projectDetail.updateStatusConfirmTitle'),
+      message: t('pages.projectDetail.updateStatusConfirmMessage'),
       details: project
-        ? `Project: ${project.project_name || 'Unnamed project'} | New status: ${selectedStatus}`
-        : `New status: ${selectedStatus}`,
-      confirmText: 'Update status',
+        ? `${project.project_name || t('reports.unassigned')} | ${selectedStatus}`
+        : selectedStatus,
+      confirmText: t('pages.projectDetail.updateStatusButton'),
       variant: 'warning'
     });
   }
@@ -41,41 +49,46 @@
   function handleTeacherSubmit(event) {
     const formElement = event.currentTarget;
     const select = formElement.querySelector('select[name="teacherId"]');
-    const selectedTeacher = select?.selectedOptions?.[0]?.textContent?.trim() || 'Selected teacher';
+    const selectedTeacher = select?.selectedOptions?.[0]?.textContent?.trim() || 'Selected professor';
 
     confirm.request(event, {
-      title: assignedTeacher ? 'Change assigned teacher?' : 'Assign teacher?',
+      title: assignedTeacher
+        ? t('pages.projectDetail.changeTeacherConfirmTitle')
+        : t('pages.projectDetail.assignTeacherConfirmTitle'),
       message: assignedTeacher
-        ? 'This action will try to replace the teacher assigned to this project.'
-        : 'This action will assign a teacher to this project.',
+        ? t('pages.projectDetail.changeTeacherConfirmMessage')
+        : t('pages.projectDetail.assignTeacherConfirmMessage'),
       details: project
-        ? `Project: ${project.project_name || 'Unnamed project'} | Teacher: ${selectedTeacher}`
-        : `Teacher: ${selectedTeacher}`,
-      confirmText: assignedTeacher ? 'Change teacher' : 'Assign teacher',
+        ? `${project.project_name || 'Unnamed project'} | ${selectedTeacher}`
+        : selectedTeacher,
+      confirmText: assignedTeacher
+        ? t('pages.projectDetail.changeTeacherButton')
+        : t('pages.projectDetail.assignTeacherButton'),
       variant: 'info'
     });
   }
 
   function handleCancelSubmit(event) {
     confirm.request(event, {
-      title: 'Cancel this project?',
-      message: 'This action will mark the project as cancelled. Only the coordinator should perform this action.',
-      details: project ? `Project: ${project.project_name || 'Unnamed project'}` : '',
-      confirmText: 'Cancel project',
+      title: t('pages.projectDetail.cancelProjectConfirmTitle'),
+      message: t('pages.projectDetail.cancelProjectConfirmMessage'),
+      details: project?.project_name || '',
+      confirmText: t('pages.projectDetail.cancelProjectButton'),
       variant: 'danger'
     });
   }
 
   function handleReactivateSubmit(event) {
     confirm.request(event, {
-      title: 'Reactivate this project?',
-      message: 'This action will reactivate the project and set its status back to Active.',
-      details: project ? `Project: ${project.project_name || 'Unnamed project'}` : '',
-      confirmText: 'Reactivate project',
+      title: t('pages.projectDetail.reactivateConfirmTitle'),
+      message: t('pages.projectDetail.reactivateConfirmMessage'),
+      details: project?.project_name || '',
+      confirmText: t('pages.projectDetail.reactivateButton'),
       variant: 'success'
     });
   }
 
+  $: projectId = data?.projectId;
   $: project = data?.project;
   $: assignedTeacher = data?.assignedTeacher || null;
   $: enrolledStudents = data?.enrolledStudents || [];
@@ -83,7 +96,18 @@
   $: actionStatuses = data?.actionStatuses || [];
   $: isProjectCancelled = Boolean(data?.isProjectCancelled);
   $: error = form?.error || data?.error || '';
-  $: successMessage = form?.message || '';
+  $: successMessage = form?.messageKey
+    ? t(`pages.projectDetail.${form.messageKey}`)
+    : form?.message || '';
+  $: documents = data?.documents || [];
+  $: documentTypes = data?.documentTypes || [];
+  $: activityEntries = data?.activityEntries || [];
+  $: users = data?.users || [];
+  $: currentUserId = data?.currentUserId ?? null;
+  $: documentError = form?.documentError || '';
+  $: documentSuccessMessage = form?.documentSuccess ? form?.documentMessage : '';
+  $: activityError = form?.activityError || '';
+  $: activitySuccessMessage = form?.activitySuccess ? form?.activityMessage : '';
 </script>
 
 <Header />
@@ -101,59 +125,59 @@
 
     <header class="main-header">
       <div>
-        <span class="eyebrow">Coordinator module</span>
-        <h1>Manage project</h1>
-        <p>Review project details, participants, status, and teacher assignment.</p>
+        <span class="eyebrow">{t('sidebar.coordinatorModuleLabel')}</span>
+        <h1>{t('pages.projectDetail.heading')}</h1>
+        <p>{t('pages.projectDetail.description')}</p>
       </div>
 
-      <a href="/coordinator/projects" class="secondary-link">Back</a>
+      <a href="/coordinator/projects" class="secondary-link">{t('ui.back')}</a>
     </header>
 
     {#if successMessage}
-      <div class="success-box">✅ {successMessage}</div>
+      <div class="success-box"><Icon name="check-circle" size={16} /> {successMessage}</div>
     {/if}
 
     {#if error}
-      <div class="error-msg">⚠️ {error}</div>
+      <div class="error-msg"><Icon name="alert-triangle" size={16} /> {error}</div>
     {/if}
 
     {#if project}
       <div class="detail-layout">
         <section class="project-panel">
           <div class="panel-heading">
-            <div class="project-icon">📁</div>
+            <div class="project-icon"><Icon name="folder" size={26} /></div>
             <div>
-              <span class="eyebrow small">Project information</span>
-              <h2>{project.project_name || 'Unnamed project'}</h2>
+              <span class="eyebrow small">{t('pages.projectDetail.infoHeading')}</span>
+              <h2>{project.project_name || t('reports.unassigned')}</h2>
               <StatusBadge category={data.statusCategory || 'other'} label={data.statusLabel} />
             </div>
           </div>
 
-          <p class="description">{project.description || 'No description available.'}</p>
+          <p class="description">{project.description || t('pages.projectDetail.noDescription')}</p>
 
           <div class="info-grid">
             <div class="info-item">
-              <span>Start date</span>
+              <span>{t('reports.startDate')}</span>
               <strong>{formatDate(project.start_date)}</strong>
             </div>
 
             <div class="info-item">
-              <span>End date</span>
+              <span>{t('reports.endDate')}</span>
               <strong>{formatDate(project.end_date)}</strong>
             </div>
 
             <div class="info-item">
-              <span>Assigned teacher</span>
+              <span>{t('reports.assignedTeacher')}</span>
               <strong>{fullName(assignedTeacher)}</strong>
             </div>
 
             <div class="info-item">
-              <span>Enrolled students</span>
+              <span>{t('pages.projectDetail.enrolledStudentsLabel')}</span>
               <strong>{enrolledStudents.length}</strong>
             </div>
 
             <div class="info-item">
-              <span>Project ID</span>
+              <span>{t('reports.projectId')}</span>
               <strong>{project.id_project}</strong>
             </div>
 
@@ -170,34 +194,28 @@
         </section>
 
         <aside class="actions-panel">
-          <span class="eyebrow small">Coordinator actions</span>
-          <h2>Project controls</h2>
+          <span class="eyebrow small">{t('pages.projectDetail.coordinatorActionsEyebrow')}</span>
+          <h2>{t('pages.projectDetail.projectControlsHeading')}</h2>
 
           {#if isProjectCancelled}
             <div class="action-block">
-              <h3>Reactivate project</h3>
-              <p>
-                This project is currently cancelled. You can reactivate it and its status
-                will return to Active.
-              </p>
+              <h3>{t('pages.projectDetail.reactivateHeading')}</h3>
+              <p>{t('pages.projectDetail.reactivateDescription')}</p>
 
               <form method="POST" action="?/reactivateProject" on:submit={handleReactivateSubmit}>
-                <button type="submit" class="reactivate-btn">Reactivate project</button>
+                <button type="submit" class="reactivate-btn">{t('pages.projectDetail.reactivateButton')}</button>
               </form>
             </div>
           {:else}
             <div class="action-block">
-              <h3>Change status</h3>
-              <p>
-                Select a new status for this project. Cancellation is handled separately
-                with the red cancel button.
-              </p>
+              <h3>{t('pages.projectDetail.changeStatusHeading')}</h3>
+              <p>{t('pages.projectDetail.changeStatusDescription')}</p>
 
               <form method="POST" action="?/updateStatus" on:submit={handleStatusSubmit}>
-                <label for="statusId">Project status</label>
+                <label for="statusId">{t('pages.projectDetail.projectStatusLabel')}</label>
 
                 <select id="statusId" name="statusId" required>
-                  <option value="">Select status</option>
+                  <option value="">{t('pages.projectDetail.selectStatusOption')}</option>
                   {#each actionStatuses as status}
                     <option
                       value={status.id_status}
@@ -208,41 +226,42 @@
                   {/each}
                 </select>
 
-                <button type="submit" class="primary-btn">Update status</button>
+                <button type="submit" class="primary-btn">{t('pages.projectDetail.updateStatusButton')}</button>
               </form>
             </div>
 
             <div class="action-block danger-zone">
-              <h3>Cancel project</h3>
-              <p>
-                Cancelling a project should only be done when it must stop being active.
-                This option is reserved for the coordinator.
-              </p>
+              <h3>{t('pages.projectDetail.cancelProjectHeading')}</h3>
+              <p>{t('pages.projectDetail.cancelProjectDescription')}</p>
 
               <form method="POST" action="?/cancelProject" on:submit={handleCancelSubmit}>
-                <button type="submit" class="danger-btn">Cancel project</button>
+                <button type="submit" class="danger-btn">{t('pages.projectDetail.cancelProjectButton')}</button>
               </form>
             </div>
           {/if}
 
           <div class="action-block">
-            <h3>{assignedTeacher ? 'Change teacher' : 'Assign teacher'}</h3>
+            <h3>
+              {assignedTeacher
+                ? t('pages.projectDetail.changeTeacherHeading')
+                : t('pages.projectDetail.assignTeacherHeading')}
+            </h3>
 
             {#if assignedTeacher}
               <p>
-                Current teacher:
+                {t('pages.projectDetail.currentTeacherLabel')}
                 <strong>{fullName(assignedTeacher)}</strong>.
-                Replacing an already-assigned teacher may not be supported yet.
+                {t('pages.projectDetail.replaceTeacherNote')}
               </p>
             {:else}
-              <p>This project does not have a teacher assigned yet.</p>
+              <p>{t('pages.projectDetail.noTeacherAssigned')}</p>
             {/if}
 
             <form method="POST" action="?/assignTeacher" on:submit={handleTeacherSubmit}>
-              <label for="teacherId">Available teachers</label>
+              <label for="teacherId">{t('pages.projectDetail.availableTeachers')}</label>
 
               <select id="teacherId" name="teacherId" required>
-                <option value="">Select teacher</option>
+                <option value="">{t('pages.projectDetail.selectTeacher')}</option>
                 {#each teachers as teacher}
                   <option
                     value={teacher.id_user}
@@ -253,8 +272,32 @@
                 {/each}
               </select>
 
+              {#if teachers.length > 0}
+                <details class="teacher-availability-list">
+                  <summary>{t('pages.projectDetail.availableTeachers')} — {t('sidebar.availability')}</summary>
+
+                  {#each teachers as teacher}
+                    <div class="teacher-availability-row">
+                      <strong>{fullName(teacher)}</strong>
+                      <span>{t('dashboard.stats.activeProjects')}: {teacher.activeProjectCount ?? 0}</span>
+                      {#if teacher.availability && teacher.availability.length > 0}
+                        <ul>
+                          {#each teacher.availability as slot}
+                            <li>{availabilityDays[Number(slot.day_of_week)] || slot.day_of_week} {formatSlotTime(slot.start_time)}–{formatSlotTime(slot.end_time)}</li>
+                          {/each}
+                        </ul>
+                      {:else}
+                        <span class="no-availability">{t('pages.teacherAvailability.emptyMessage')}</span>
+                      {/if}
+                    </div>
+                  {/each}
+                </details>
+              {/if}
+
               <button type="submit" class="primary-btn">
-                {assignedTeacher ? 'Change teacher' : 'Assign teacher'}
+                {assignedTeacher
+                  ? t('pages.projectDetail.changeTeacherButton')
+                  : t('pages.projectDetail.assignTeacherButton')}
               </button>
             </form>
           </div>
@@ -264,31 +307,31 @@
       <section class="participants-panel">
         <div class="section-title">
           <div>
-            <span class="eyebrow small">Participants</span>
-            <h2>Project team</h2>
+            <span class="eyebrow small">{t('pages.projectDetail.participantsEyebrow')}</span>
+            <h2>{t('pages.projectDetail.projectTeamHeading')}</h2>
           </div>
 
-          <span class="count-badge">{enrolledStudents.length + (assignedTeacher ? 1 : 0)} people</span>
+          <span class="count-badge">{t('pages.projectDetail.peopleCount', { count: enrolledStudents.length + (assignedTeacher ? 1 : 0) })}</span>
         </div>
 
         <div class="participant-block">
-          <h3>Assigned teacher</h3>
+          <h3>{t('reports.assignedTeacher')}</h3>
 
           {#if assignedTeacher}
             <article class="participant-card teacher">
               <div class="avatar">T</div>
               <div>
                 <strong>{fullName(assignedTeacher)}</strong>
-                <span>{assignedTeacher.email || 'No email registered'}</span>
+                <span>{assignedTeacher.email || t('ui.noEmailRegistered')}</span>
               </div>
             </article>
           {:else}
-            <div class="empty-box">No teacher has been assigned yet.</div>
+            <div class="empty-box">{t('pages.projectDetail.noTeacherAssigned')}</div>
           {/if}
         </div>
 
         <div class="participant-block">
-          <h3>Enrolled students</h3>
+          <h3>{t('pages.projectDetail.enrolledStudentsLabel')}</h3>
 
           {#if enrolledStudents.length > 0}
             <div class="students-list">
@@ -297,27 +340,48 @@
                   <div class="avatar">S</div>
                   <div>
                     <strong>{fullName(student)}</strong>
-                    <span>{student.email || 'No email registered'}</span>
+                    <span>{student.email || t('ui.noEmailRegistered')}</span>
                   </div>
                 </article>
               {/each}
             </div>
           {:else}
-            <div class="empty-box">No students enrolled yet.</div>
+            <div class="empty-box">{t('pages.projectDetail.noStudentsEnrolledYet')}</div>
           {/if}
         </div>
       </section>
+
+      <DocumentsPanel
+        {documents}
+        {documentTypes}
+        {users}
+        {currentUserId}
+        isStaff={true}
+        confirm={confirm}
+        error={documentError}
+        successMessage={documentSuccessMessage}
+        downloadHrefFor={(doc) => `/coordinator/view_project/${projectId}/documents/${doc.id_document}/download`}
+      />
+
+      <ActivityPanel
+        progressEntries={activityEntries}
+        {users}
+        {currentUserId}
+        canAddEntry={true}
+        isStaff={true}
+        confirm={confirm}
+        error={activityError}
+        successMessage={activitySuccessMessage}
+      />
     {:else if !error}
       <section class="empty-state">
-        <div>📭</div>
-        <h2>Project not found</h2>
-        <p>The requested project could not be loaded.</p>
+        <div><Icon name="inbox" size={32} /></div>
+        <h2>{t('pages.projectDetail.projectNotFoundHeading')}</h2>
+        <p>{t('pages.projectDetail.projectNotFoundBody')}</p>
       </section>
     {/if}
   </div>
 </main>
-
-<Footer />
 
 <ConfirmModal
   open={confirm.state.open}
@@ -325,7 +389,7 @@
   message={confirm.state.message}
   details={confirm.state.details}
   confirmText={confirm.state.confirmText}
-  cancelText="Cancel"
+  cancelText={t('confirmModal.cancel')}
   variant={confirm.state.variant}
   loading={confirm.state.loading}
   onCancel={confirm.cancel}
@@ -612,6 +676,45 @@
     color: var(--sgpa-blue-dark);
     font-size: 1rem;
     font-weight: 950;
+  }
+
+  .teacher-availability-list {
+    margin: 0.75rem 0;
+    padding: 0.75rem 0.9rem;
+    border-radius: 14px;
+    border: 1px solid var(--sgpa-border);
+    background: var(--sgpa-surface-soft);
+  }
+
+  .teacher-availability-list summary {
+    cursor: pointer;
+    font-weight: 850;
+    color: var(--sgpa-blue);
+  }
+
+  .teacher-availability-row {
+    display: grid;
+    gap: 0.15rem;
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--sgpa-border);
+    font-size: 0.88rem;
+  }
+
+  .teacher-availability-row:first-of-type {
+    border-top: none;
+    margin-top: 0.5rem;
+    padding-top: 0;
+  }
+
+  .teacher-availability-row ul {
+    margin: 0.2rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--sgpa-text-soft);
+  }
+
+  .no-availability {
+    color: var(--sgpa-text-soft);
   }
 
   label {

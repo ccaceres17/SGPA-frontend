@@ -63,6 +63,7 @@ export async function load({ fetch, locals }) {
       const teacher = teacherId ? usersMap.get(Number(teacherId)) : null;
 
       return {
+        id_project: Number(project.id_project),
         proyecto_card: buildProjectCardHtml({
           project,
           statusLabel: getStatusLabel(project.id_status, statuses),

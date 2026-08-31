@@ -29,6 +29,23 @@ export function buildLoginRequestInit(email, password) {
  * src/lib/i18n/messages.js#errors instead of using this string directly.
  */
 export function classifyLoginError(status, _data) {
+  // Checked before the numeric-status branches below: 403 already has an
+  // unrelated generic "forbidden" fallback that must not swallow these two
+  // more specific, newer account-status cases.
+  if (_data?.detail === 'ACCOUNT_NOT_CLAIMED') {
+    return {
+      type: 'account-not-claimed',
+      message: 'Your account has not been activated yet. Please check your email for the activation link.'
+    };
+  }
+
+  if (_data?.detail === 'ACCOUNT_DISABLED') {
+    return {
+      type: 'account-disabled',
+      message: 'Your account has been disabled. Please contact your coordinator.'
+    };
+  }
+
   const code = Number(status) || 0;
 
   if (code === 400 || code === 401 || code === 422) {

@@ -1,5 +1,7 @@
 <script>
+  import { onMount, onDestroy, tick } from 'svelte';
   import { t } from '$lib/stores/locale.svelte.js';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   export let open = false;
   export let title = '';
@@ -12,6 +14,21 @@
   export let onConfirm = () => {};
   export let onCancel = () => {};
 
+  let dialogEl;
+
+  function handleKeydown(event) {
+    if (event.key === 'Escape' && open && !loading) {
+      onCancel();
+    }
+  }
+
+  $: if (open) {
+    tick().then(() => dialogEl?.querySelector('.modal-btn.cancel')?.focus());
+  }
+
+  onMount(() => window.addEventListener('keydown', handleKeydown));
+  onDestroy(() => window.removeEventListener('keydown', handleKeydown));
+
   $: displayTitle = title || t('confirmModal.defaultTitle');
   $: displayMessage = message || t('confirmModal.defaultMessage');
   $: displayConfirmText = confirmText || t('confirmModal.confirm');
@@ -19,12 +36,12 @@
 
   $: icon =
     variant === 'danger'
-      ? '!'
+      ? 'alert-triangle'
       : variant === 'success'
-        ? '✓'
+        ? 'check-circle'
         : variant === 'warning'
-          ? '?'
-          : 'i';
+          ? 'alert-triangle'
+          : 'info';
 
   $: eyebrow =
     variant === 'danger'
@@ -53,6 +70,7 @@
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
+      bind:this={dialogEl}
     >
       <button
         type="button"
@@ -71,7 +89,7 @@
         class:warning={variant === 'warning'}
         class:info={variant === 'info'}
       >
-        {icon}
+        <Icon name={icon} size={28} strokeWidth={2.2} />
       </div>
 
       <div class="modal-copy">

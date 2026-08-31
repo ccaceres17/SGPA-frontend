@@ -1,6 +1,6 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import Header from '$lib/components/Header_St.svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/CoordinatorSideBar.svelte';
   import CoordinatorUsersDataTable from '$lib/components/CoordinatorUsersDataTable.svelte';
   import { t } from '$lib/stores/locale.svelte.js';
@@ -10,7 +10,13 @@
 
   $: users = data?.users || [];
   $: error = form?.error || data?.error || '';
-  $: successMessage = form?.message || '';
+  $: successMessage =
+    form?.message ||
+    (form?.invitationResent
+      ? form.emailDelivered
+        ? t('ui.invitationResent')
+        : t('ui.invitationNotSent')
+      : '');
 </script>
 
 <Header />
@@ -27,7 +33,7 @@
 
       <div class="header-actions">
         <a class="report-btn" href="/coordinator/teachers/report" target="_blank" rel="noopener noreferrer">
-          {t('pages.coordinatorTeachers.pdfReport')}
+          <Icon name="file-text" size={15} /> {t('pages.coordinatorTeachers.pdfReport')}
         </a>
 
         <span class="header-label">{t('sidebar.teachers')}</span>
@@ -35,11 +41,11 @@
     </section>
 
     {#if successMessage}
-      <div class="success-box">✅ {successMessage}</div>
+      <div class="success-box"><Icon name="check-circle" size={16} /> {successMessage}</div>
     {/if}
 
     {#if error}
-      <div class="error-msg">⚠️ {error}</div>
+      <div class="error-msg"><Icon name="alert-triangle" size={16} /> {error}</div>
     {/if}
 
     <CoordinatorUsersDataTable
@@ -53,8 +59,6 @@
     />
   </div>
 </main>
-
-<Footer />
 
 <style>
   main {
@@ -140,12 +144,6 @@
       box-shadow 0.22s ease,
       background 0.22s ease,
       border-color 0.22s ease;
-  }
-
-  .report-btn::before {
-    content: '📄';
-    font-size: 0.95rem;
-    line-height: 1;
   }
 
   .report-btn:hover {

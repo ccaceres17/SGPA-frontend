@@ -1,6 +1,6 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import Header from '$lib/components/Header_St.svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import DashboardStats from '$lib/components/Projects.svelte';
   import SideBar from '$lib/components/TeacherSideBar.svelte';
   import ProjectCardsDataTable from '$lib/components/ProjectCardDatatable.svelte';
@@ -15,7 +15,7 @@
     {
       label: t('pages.teacherMyProjects.heading'),
       value: data.totalProjects || 0,
-      icon: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
+      iconName: 'folder',
       bgColor: 'var(--sgpa-success-bg)',
       color: 'var(--sgpa-success)'
     }
@@ -44,7 +44,7 @@
     </header>
 
     {#if error}
-      <div class="error-msg">⚠️ {error}</div>
+      <div class="error-msg"><Icon name="alert-triangle" size={16} /> {error}</div>
     {/if}
 
     <DashboardStats {stats} />
@@ -58,8 +58,6 @@
     />
   </div>
 </main>
-
-<Footer />
 
 <style>
   main {

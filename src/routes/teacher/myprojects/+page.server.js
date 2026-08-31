@@ -5,7 +5,8 @@ import {
   getStatuses,
   ROLE_IDS,
   getStatusLabel,
-  getUserFullName
+  getUserFullName,
+  PROJECT_CARD_ICON_SVG
 } from '$lib/server/project-helpers.js';
 
 // Cookie name used by a previous implementation that faked a "successful"
@@ -30,7 +31,7 @@ function escapeHtml(value = '') {
 function buildProjectCardHtml({
   project,
   statusLabel = 'Unknown',
-  teacherName = 'Current teacher',
+  teacherName = 'Current professor',
   actionHref = '#',
   actionLabel = 'View project',
   badgeLabel = 'Assigned project'
@@ -48,7 +49,7 @@ function buildProjectCardHtml({
   return `
     <div class="project-card">
       <div class="project-card__left">
-        <div class="project-card__icon">📁</div>
+        <div class="project-card__icon">${PROJECT_CARD_ICON_SVG}</div>
 
         <div class="project-card__content">
           <h3>${projectName}</h3>
@@ -82,7 +83,7 @@ export async function load({ fetch, locals, cookies }) {
       rows: [],
       totalProjects: 0,
       currentTeacherId,
-      error: 'Could not identify the logged-in teacher.'
+      error: 'Could not identify the logged-in professor.'
     };
   }
 
@@ -114,10 +115,11 @@ export async function load({ fetch, locals, cookies }) {
 
     const rows = teacherProjects.map((project) => {
       return {
+        id_project: Number(project.id_project),
         proyecto_card: buildProjectCardHtml({
           project,
           statusLabel: getStatusLabel(project.id_status, statuses),
-          teacherName: currentTeacher ? getUserFullName(currentTeacher) : 'Current teacher',
+          teacherName: currentTeacher ? getUserFullName(currentTeacher) : 'Current professor',
           actionHref: `/teacher/view_project/${project.id_project}`,
           actionLabel: 'View project',
           badgeLabel: 'Assigned project'

@@ -5,7 +5,8 @@ import {
   getStatuses,
   ROLE_IDS,
   getStatusLabel,
-  getUserFullName
+  getUserFullName,
+  PROJECT_CARD_ICON_SVG
 } from '$lib/server/project-helpers.js';
 
 function escapeHtml(value = '') {
@@ -23,7 +24,7 @@ function buildProjectCardHtml({
   teacherName = 'Unassigned',
   actionHref = '#',
   actionLabel = 'View details',
-  badgeLabel = 'Teacher view'
+  badgeLabel = 'Professor view'
 }) {
   const projectName = escapeHtml(project?.project_name ?? 'Unnamed');
   const description = escapeHtml(project?.description ?? 'No description');
@@ -38,7 +39,7 @@ function buildProjectCardHtml({
   return `
     <div class="project-card">
       <div class="project-card__left">
-        <div class="project-card__icon">📁</div>
+        <div class="project-card__icon">${PROJECT_CARD_ICON_SVG}</div>
 
         <div class="project-card__content">
           <h3>${projectName}</h3>
@@ -85,13 +86,14 @@ export async function load({ fetch }) {
       const teacher = teacherId ? usersMap.get(Number(teacherId)) : null;
 
       return {
+        id_project: Number(project.id_project),
         proyecto_card: buildProjectCardHtml({
           project,
           statusLabel: getStatusLabel(project.id_status, statuses),
           teacherName: teacher ? getUserFullName(teacher) : 'Unassigned',
           actionHref: `/teacher/view_project/${project.id_project}`,
           actionLabel: 'View details',
-          badgeLabel: 'Teacher view'
+          badgeLabel: 'Professor view'
         })
       };
     });

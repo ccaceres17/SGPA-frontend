@@ -4,6 +4,7 @@ import { getResearchGroups } from '$lib/server/project-helpers.js';
 import { getLocaleFromCookies } from '$lib/server/locale.js';
 import { translate } from '$lib/i18n/locale.js';
 import { messages } from '$lib/i18n/messages.js';
+import { formatBackendDetail } from '$lib/server/error-format.js';
 
 const PROJECT_USER_TEACHER_ROLE_ID = 3;
 const DEFAULT_RESEARCH_GROUP_ID = 1;
@@ -166,11 +167,9 @@ async function apiFetch(fetch, path, options = {}) {
 
   if (!response.ok) {
     const backendMessage =
-      data?.detail ||
-      data?.message ||
-      data?.error ||
-      text ||
-      `Request failed with status ${response.status}.`;
+      typeof data === 'string' && data
+        ? data
+        : formatBackendDetail(data) || text || `Request failed with status ${response.status}.`;
 
     throw new Error(backendMessage);
   }
@@ -315,7 +314,7 @@ async function assignTeacherToProject(fetch, { id_project, id_user, assigned_dat
     }
   }
 
-  throw lastError || new Error('Could not register the teacher in project-users.');
+  throw lastError || new Error('Could not register the professor in project-users.');
 }
 
 /** @type {import('./$types').PageServerLoad} */
@@ -419,7 +418,7 @@ export const actions = {
 
     if (!values.project_name || !values.start_date || !values.teacher_id) {
       return fail(400, {
-        error: 'You must complete the project name, start date, and assigned teacher.',
+        error: 'You must complete the project name, start date, and assigned professor.',
         values
       });
     }
@@ -450,7 +449,7 @@ export const actions = {
 
       if (!createdProjectId) {
         return fail(400, {
-          error: 'The project was created, but id_project could not be retrieved to assign the teacher.',
+          error: 'The project was created, but id_project could not be retrieved to assign the professor.',
           values
         });
       }
@@ -468,7 +467,7 @@ export const actions = {
       }
 
       return fail(500, {
-        error: error.message || 'Internal error while creating the project or assigning the teacher.',
+        error: error.message || 'Internal error while creating the project or assigning the professor.',
         values
       });
     }

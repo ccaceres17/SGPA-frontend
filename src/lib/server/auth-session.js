@@ -66,7 +66,7 @@ export function getRoleLabel(role = '') {
 
   const labels = {
     students: 'Student',
-    teacher: 'Teacher',
+    teacher: 'Professor',
     coordinator: 'Coordinator'
   };
 

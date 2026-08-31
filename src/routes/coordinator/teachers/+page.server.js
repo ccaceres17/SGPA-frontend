@@ -1,7 +1,8 @@
 import { fail } from '@sveltejs/kit';
 import { API_BASE_URL, getAuthHeaders } from '$lib/components/Tokens.js';
-import { getUsers, ROLE_IDS } from '$lib/server/project-helpers.js';
+import { getUsers, ROLE_IDS, getUserLifecycleStatus } from '$lib/server/project-helpers.js';
 import { applyStatusUpdate } from '$lib/server/status-update.js';
+import { formatBackendDetail } from '$lib/server/error-format.js';
 
 function toBool(value) {
   return value === true || String(value).trim().toLowerCase() === 'true';
@@ -48,10 +49,7 @@ async function apiRequest(fetch, path, method, payload) {
   }
 
   if (!response.ok) {
-    const detail =
-      typeof data === 'string'
-        ? data
-        : data?.detail || data?.message || data?.error || JSON.stringify(data);
+    const detail = typeof data === 'string' ? data : formatBackendDetail(data);
 
     const error = new Error(`Status ${response.status}. ${detail}`);
     error.status = response.status;
@@ -117,7 +115,8 @@ export async function load({ fetch }) {
       .filter((user) => Number(user.id_role) === ROLE_IDS.teacher)
       .map((user) => ({
         ...user,
-        is_active: normalizeActiveStatus(user.is_active)
+        is_active: normalizeActiveStatus(user.is_active),
+        lifecycleStatus: getUserLifecycleStatus(user)
       }))
       .sort((a, b) =>
         `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
@@ -131,7 +130,7 @@ export async function load({ fetch }) {
     return {
       users: [],
       totalUsers: 0,
-      error: error.message || 'Could not load teachers.'
+      error: error.message || 'Could not load professors.'
     };
   }
 }
@@ -161,7 +160,27 @@ export const actions = {
       success: true,
       visualUserId: userId,
       visualIsActive: isActive,
-      message: isActive ? 'Teacher enabled successfully.' : 'Teacher disabled successfully.'
+      message: isActive ? 'Professor enabled successfully.' : 'Professor disabled successfully.'
     };
+  },
+
+  resendInvitation: async ({ request, fetch }) => {
+    const formData = await request.formData();
+    const userId = Number(formData.get('id_user'));
+
+    if (!userId) {
+      return fail(400, { error: 'Invalid user.' });
+    }
+
+    let response;
+    const result = await applyStatusUpdate(async () => {
+      response = await apiRequest(fetch, `users/${userId}/resend-invitation`, 'POST', {});
+    });
+
+    if (!result.success) {
+      return fail(result.status >= 400 ? result.status : 500, { error: result.message });
+    }
+
+    return { invitationResent: true, emailDelivered: Boolean(response?.email_delivered) };
   }
 };

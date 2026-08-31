@@ -10,7 +10,7 @@ export async function load({ fetch, locals }) {
       scope: 'all',
       title: 'Coordinator projects report',
       subtitle:
-        'General report of academic projects, assigned teachers, enrolled students, and current project status.'
+        'General report of academic projects, assigned professors, enrolled students, and current project status.'
     });
 
     return { report };

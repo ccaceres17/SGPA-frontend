@@ -8,17 +8,17 @@ export async function load({ fetch, locals }) {
       locals,
       moduleName: 'teacher',
       scope: 'all',
-      title: 'Teacher available projects report',
+      title: 'Professor available projects report',
       subtitle:
-        'Report of academic projects visible from the teacher module, including project status, assigned teacher, and enrolled students.'
+        'Report of academic projects visible from the professor module, including project status, assigned professor, and enrolled students.'
     });
 
     return { report };
   } catch (error) {
     return {
-      error: error.message || 'Could not generate teacher projects report.',
+      error: error.message || 'Could not generate professor projects report.',
       report: {
-        title: 'Teacher available projects report',
+        title: 'Professor available projects report',
         subtitle: 'Report of visible academic projects.',
         projects: []
       }

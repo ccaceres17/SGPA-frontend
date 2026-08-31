@@ -1,12 +1,17 @@
 <script>
+  import Icon from '$lib/components/icons/Icon.svelte';
   import Header from '$lib/components/Header_St.svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import SideBar from '$lib/components/CoordinatorSideBar.svelte';
   import { t } from '$lib/stores/locale.svelte.js';
 
   export let form;
 
   $: savedValues = form?.values || {};
+  $: successMessage = form?.success
+    ? form.emailDelivered
+      ? t('pages.createUsers.emailSentNote')
+      : t('pages.createUsers.emailNotSentNote')
+    : '';
 
   function getValue(name) {
     return savedValues[name] ?? '';
@@ -31,11 +36,11 @@
     </header>
 
     {#if form?.success}
-      <div class="success-msg">✅ {form.message}</div>
+      <div class="success-msg" role="status"><Icon name="check-circle" size={16} /> {successMessage}</div>
     {/if}
 
     {#if form?.error}
-      <div class="error-msg">⚠️ {form.error}</div>
+      <div class="error-msg"><Icon name="alert-triangle" size={16} /> {form.error}</div>
     {/if}
 
     <section class="form-section">
@@ -100,18 +105,6 @@
             </div>
 
             <div class="field">
-              <label for="password">{t('login.passwordLabel')}</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                placeholder={t('pages.createUsers.passwordPlaceholder')}
-                autocomplete="new-password"
-                required
-              />
-            </div>
-
-            <div class="field">
               <label for="id_role">{t('pages.createUsers.userType')}</label>
               <select id="id_role" name="id_role" required>
                 <option value="">{t('pages.createUsers.selectRole')}</option>
@@ -125,22 +118,6 @@
             </div>
           </div>
 
-          <div class="extra-options">
-            <label class="checkbox-label" for="is_active">
-              <input
-                id="is_active"
-                name="is_active"
-                type="checkbox"
-                checked={savedValues.is_active ?? true}
-              />
-
-              <span>
-                <strong>{t('pages.createUsers.activeUser')}</strong>
-                <small>{t('pages.createUsers.activeUserHint')}</small>
-              </span>
-            </label>
-          </div>
-
           <div class="form-actions">
             <button type="reset" class="clear-btn">{t('pages.createUsers.clearForm')}</button>
             <button type="submit" class="save-btn">{t('pages.createUsers.createUser')}</button>
@@ -150,8 +127,6 @@
     </section>
   </div>
 </main>
-
-<Footer />
 
 <style>
   main {
@@ -305,43 +280,6 @@
   .field select:focus {
     border-color: var(--sgpa-yellow);
     box-shadow: var(--sgpa-focus);
-  }
-
-  .extra-options {
-    padding: 1rem;
-    border-radius: 20px;
-    background: var(--sgpa-surface-soft);
-    border: 1px solid var(--sgpa-border);
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.8rem;
-    color: var(--sgpa-text);
-    cursor: pointer;
-  }
-
-  .checkbox-label input {
-    width: 18px;
-    height: 18px;
-    margin-top: 0.2rem;
-    accent-color: var(--sgpa-blue);
-  }
-
-  .checkbox-label span {
-    display: grid;
-    gap: 0.2rem;
-  }
-
-  .checkbox-label strong {
-    color: var(--sgpa-blue-dark);
-    font-weight: 900;
-  }
-
-  .checkbox-label small {
-    color: var(--sgpa-text-soft);
-    line-height: 1.5;
   }
 
   .form-actions {
